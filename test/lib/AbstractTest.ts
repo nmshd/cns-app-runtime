@@ -1,4 +1,4 @@
-import { AppConfig, AppRuntime } from "@jssnmshd/app-runtime"
+import { AppConfig, AppRuntime } from "@nmshd/app-runtime"
 import { NativeBootstrapperMock } from "../mocks/NativeBootstrapperMock"
 
 export abstract class AbstractTest {

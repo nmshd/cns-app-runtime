@@ -1,5 +1,5 @@
 import { NativePlatform } from "@js-soft/native-abstractions"
-import { AppConfig, createAppConfig } from "@jssnmshd/app-runtime"
+import { AppConfig, createAppConfig } from "@nmshd/app-runtime"
 import { IConfigOverwrite } from "@nmshd/transport"
 import { AppRelationshipFacadeTest, MessageFacadeTest } from "./extensibility"
 import { MessageEventingTest, RelationshipEventingAcceptTest, RelationshipEventingRejectTest } from "./modules"

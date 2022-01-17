@@ -33,7 +33,7 @@ module.exports = {
         fs: "NMSHDTransport",
         sap: "sap",
         "graceful-fs": "NMSHDTransport",
-        "@jssnmshd/app-runtime": "NMSHDAppRuntime",
+        "@nmshd/app-runtime": "NMSHDAppRuntime",
         "@nmshd/consumption": "NMSHDConsumption",
         "@nmshd/content": "NMSHDContent",
         "@nmshd/transport": "NMSHDTransport",

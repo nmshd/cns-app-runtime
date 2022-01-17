@@ -22,7 +22,7 @@
         "baseUrl": "../",
         "paths": {
             "chaimodule": ["./test/types/globalsals"],
-            "@jssnmshd/app-runtime": ["./src"]
+            "@nmshd/app-runtime": ["./src"]
         }
     },
     "include": ["**/*.ts"],

@@ -1,4 +1,4 @@
-import { LocalAccountDTO } from "@jssnmshd/app-runtime"
+import { LocalAccountDTO } from "@nmshd/app-runtime"
 import { Realm } from "@nmshd/transport"
 import { expect } from "chai"
 import { AbstractTest, EventListener } from "../lib"

@@ -1,4 +1,4 @@
-import { AppConfig, AppRuntime, AppRuntimeModule } from "@jssnmshd/app-runtime"
+import { AppConfig, AppRuntime, AppRuntimeModule } from "@nmshd/app-runtime"
 import { expect } from "chai"
 import { AbstractTest } from "../lib"
 

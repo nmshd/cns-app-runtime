@@ -22,7 +22,7 @@
         "types": ["mocha", "chai"],
         "baseUrl": ".",
         "paths": {
-            "@jssnmshd/app-runtime": ["./src"],
+            "@nmshd/app-runtime": ["./src"],
             "chaimodule": ["./test/types/globalsals"]
         }
     },

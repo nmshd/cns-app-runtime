@@ -1,4 +1,4 @@
-import { LocalAccountSession, MailReceivedEvent } from "@jssnmshd/app-runtime"
+import { LocalAccountSession, MailReceivedEvent } from "@nmshd/app-runtime"
 import { MessageReceivedEvent } from "@nmshd/runtime"
 import { expect } from "chai"
 import { AbstractTest, EventListener, TestUtil } from "../lib"

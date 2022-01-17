@@ -1,4 +1,4 @@
-import { LocalAccountSession, OnboardingChangeReceivedEvent } from "@jssnmshd/app-runtime"
+import { LocalAccountSession, OnboardingChangeReceivedEvent } from "@nmshd/app-runtime"
 import { RelationshipChangedEvent, RelationshipChangeStatus, RelationshipStatus } from "@nmshd/runtime"
 import { expect } from "chai"
 import { AbstractTest, EventListener, TestUtil } from "../lib"

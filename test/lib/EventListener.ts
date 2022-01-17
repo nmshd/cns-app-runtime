@@ -1,4 +1,4 @@
-import { LocalAccountSession } from "@jssnmshd/app-runtime"
+import { LocalAccountSession } from "@nmshd/app-runtime"
 import { DataEvent, Event, Runtime } from "@nmshd/runtime"
 
 export class EventWrapper {

@@ -1,5 +1,5 @@
 import { sleep } from "@js-soft/ts-utils"
-import { LocalAccountSession } from "@jssnmshd/app-runtime"
+import { LocalAccountSession } from "@nmshd/app-runtime"
 import { BackboneIds, Realm } from "@nmshd/transport"
 import { expect } from "chai"
 import { AbstractTest, TestUtil } from "../lib"

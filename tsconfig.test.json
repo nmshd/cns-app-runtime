@@ -21,7 +21,7 @@
         "types": ["node", "mocha", "chai"],
         "baseUrl": "./test",
         "paths": {
-            "@jssnmshd/app-runtime": ["../dist"]
+            "@nmshd/app-runtime": ["../dist"]
         }
     },
     "include": ["test/**/*.ts"],
