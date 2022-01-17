@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "target": "es2019",
+        "module": "commonjs",
+        "sourceMap": true,
+        "declaration": true,
+        "outDir": "dist-test",
+        "strict": true,
+        "allowSyntheticDefaultImports": true,
+        "emitDecoratorMetadata": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "resolveJsonModule": true,
+        "moduleResolution": "node",
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": false,
+        "downlevelIteration": true,
+        "lib": ["es2019"],
+        "types": ["node", "mocha", "chai"],
+        "baseUrl": "./test",
+        "paths": {
+            "@nmshd/app-runtime": ["../dist"]
+        }
+    },
+    "include": ["test/**/*.ts"],
+    "exclude": ["node_modules"]
+}

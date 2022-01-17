@@ -1,0 +1,50 @@
+{
+    "testFolder": "./lib-web",
+    "runners": [
+        {
+            "dependencies": [
+                "logger.js",
+                "lokijs.min.js",
+                "tsserval.js",
+                "nmshd.crypto.min.js",
+                "nmshd.transport.min.js",
+                "nmshd.content.min.js",
+                "nmshd.consumption.min.js",
+                "nmshd.runtime.min.js",
+                "nmshd.app-runtime.min.js",
+                "nmshd.app-runtime.test.js"
+            ],
+            "globals": [
+                "Logger",
+                "loki",
+                "TSServal",
+                "NMSHDCrypto",
+                "NMSHDTransport",
+                "NMSHDContent",
+                "NMSHDConsumption",
+                "NMSHDRuntime",
+                "NMSHDAppRuntime",
+                "NMSHDAppRuntimeTest"
+            ]
+        }
+    ],
+    "proxies": [
+        {
+            "local": "/svc-local",
+            "remote": "localhost"
+        },
+        {
+            "local": "/svc-dev",
+            "remote": "http://dev.enmeshed.eu"
+        },
+        {
+            "local": "/svc-stage",
+            "remote": "https://stage.enmeshed.eu"
+        },
+        {
+            "local": "/svc-prod",
+            "remote": "https://prod.enmeshed.eu"
+        }
+    ],
+    "additionalScripts": []
+}
