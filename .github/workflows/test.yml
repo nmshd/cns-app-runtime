@@ -1,8 +1,8 @@
 name: Test
 
 on:
-  push:
-    branches-ignore: [main]
+  # push:
+  #   branches-ignore: [main]
   pull_request:
     branches: [main]
 
@@ -22,11 +22,10 @@ jobs:
       - run: npm run build
       - run: npm run test:web
 
-  test-node:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-      - uses: supercharge/mongodb-github-action@1.6.0
-      - run: npm ci
-      - run: npm run test:node
+  # test-node:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v2
+  #     - run: npm ci
+  #     - run: npm run test:node
