@@ -31,10 +31,8 @@
         "lint:tsc": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
         "test": "npm run test:node && npm run test:web",
         "test:node": "mocha -r ts-node/register -r tsconfig-paths/register ./test/index.ts --project ./test/tsconfig.json --exit",
-        "test:node:ci": "npm run test:node",
         "test:single": "mocha -r ts-node/register -r tsconfig-paths/register ./test/index.single.ts --project ./test/tsconfig.json --exit",
         "test:web": "browsertest-runner",
-        "test:web:ci": "npm run build && browsertest-runner",
         "test:web:debug": "browsertest-runner-debug"
     },
     "dependencies": {
