@@ -6,6 +6,12 @@ on:
       - main
 
 jobs:
+  run-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: bash .ci/runChecks.sh
+
   publish-npm:
     runs-on: ubuntu-latest
     steps:
@@ -14,11 +20,13 @@ jobs:
         with:
           node-version: 14
           registry-url: https://registry.npmjs.org/
-      - run: bash .ci/build.sh
+      - run: sudo apt-get update && sudo apt-get install jq -y
+      - run: npm ci
+      - run: npm run build:ci
         env:
           BUILD_NUMBER: ${{ github.run_number }}
           COMMIT_HASH: ${{ github.sha }}
-      - run: bash .ci/runChecks.sh
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    needs: ["run-checks"]
