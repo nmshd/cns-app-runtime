@@ -8,7 +8,7 @@ export class RelationshipEventingAcceptTest extends AbstractTest {
         const that = this
 
         describe("RelationshipEventingAcceptTest", function () {
-            this.timeout(20000)
+            this.timeout(60000)
 
             let sessionA: LocalAccountSession
             let sessionB: LocalAccountSession
@@ -62,7 +62,7 @@ export class RelationshipEventingAcceptTest extends AbstractTest {
                     relationshipChangedEvent.data.id
                 )
                 expect(onboardingChangeReceivedEvent.data.relationship).to.eq(relationshipChangedEvent.data)
-            }).timeout(10000)
+            })
 
             it("should fire events on the templator when relationship request was accepted (by templator itself)", async function () {
                 const eventListenerFrom = new EventListener(that.runtime, [RelationshipChangedEvent], sessionA)
@@ -117,7 +117,7 @@ export class RelationshipEventingAcceptTest extends AbstractTest {
                 )
 
                 expect(onboardingChangeReceivedEvent.data.relationship).to.eq(relationshipChangedEvent.data)
-            }).timeout(10000)
+            })
 
             after(async function () {
                 await that.runtime.stop()

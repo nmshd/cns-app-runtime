@@ -7,7 +7,7 @@ export class MessageFacadeTest extends AbstractTest {
         const that = this
 
         describe("Message", function () {
-            this.timeout(20000)
+            this.timeout(60000)
 
             before(async function () {
                 await that.createRuntime()
@@ -21,7 +21,7 @@ export class MessageFacadeTest extends AbstractTest {
                 const messages = await that.runtime.transportServices.messages.getMessages({ query: {} })
                 expect(messages.isSuccess).to.be.true
                 expect(messages.value).be.an("Array")
-            }).timeout(10000)
+            })
 
             after(async function () {
                 await that.runtime.stop()

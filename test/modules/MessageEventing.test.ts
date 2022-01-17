@@ -8,7 +8,7 @@ export class MessageEventingTest extends AbstractTest {
         const that = this
 
         describe("MessageEventingTest", function () {
-            this.timeout(20000)
+            this.timeout(60000)
 
             let sessionA: LocalAccountSession
             let sessionB: LocalAccountSession
@@ -59,7 +59,7 @@ export class MessageEventingTest extends AbstractTest {
                 expect(mailReceivedEvent.data.type).to.eq("MailDVO")
                 expect(mailReceivedEvent.data.createdBy.type).to.eq("IdentityDVO")
                 expect(mailReceivedEvent.data.createdBy.name).to.eq(createdBy.substring(3, 9))
-            }).timeout(10000)
+            })
 
             after(async function () {
                 await that.runtime.stop()

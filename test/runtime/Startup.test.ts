@@ -35,27 +35,27 @@ export class StartupTest extends AbstractTest {
 
             it("should fire event when initializing runtime", function () {
                 expect(events[i++].namespace).to.equal("runtime.initializing")
-            }).timeout(10000)
+            })
 
             it("should fire event when initializing TransportLibrary", function () {
                 expect(events[i++].namespace).to.equal("transport.initializing")
-            }).timeout(10000)
+            })
 
             it("should fire event after initializing TransportLibrary", function () {
                 expect(events[i++].namespace).to.equal("transport.initialized")
-            }).timeout(10000)
+            })
 
             it("should fire event when loading modules", function () {
                 expect(events[i++].namespace).to.equal("runtime.modulesLoaded")
-            }).timeout(10000)
+            })
 
             it("should fire event after loading modules", function () {
                 expect(events[i++].namespace).to.equal("runtime.modulesInitialized")
-            }).timeout(10000)
+            })
 
             it("should fire event after initializing runtime", function () {
                 expect(events[i++].namespace).to.equal("runtime.initialized")
-            }).timeout(10000)
+            })
 
             it("should create an account", async function () {
                 localAccount = await that.runtime.accountServices.createAccount(Realm.Prod, "Profil 1")

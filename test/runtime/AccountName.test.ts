@@ -8,7 +8,7 @@ export class AccountNameTest extends AbstractTest {
 
         describe("Test setting the account name", function () {
             let localAccount: LocalAccountDTO
-            this.timeout(5000)
+            this.timeout(60000)
 
             before(async function () {
                 await that.createRuntime()
@@ -28,7 +28,7 @@ export class AccountNameTest extends AbstractTest {
                 const account = accounts.find((acc) => acc.id.toString() === localAccount.id.toString())!
 
                 expect(account.name).to.equal(accountName)
-            }).timeout(15000)
+            })
 
             after(async function () {
                 await that.runtime.stop()

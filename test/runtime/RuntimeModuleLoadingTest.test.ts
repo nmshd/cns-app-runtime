@@ -51,7 +51,7 @@ export class RuntimeModuleLoadingTest extends AbstractTest {
             it("should start and stop the module", async function () {
                 await that.runtime.start()
                 expect(moduleStarted).to.be.true
-            }).timeout(10000)
+            }).timeout(30000)
 
             it("should stop the module", async function () {
                 await that.runtime.stop()

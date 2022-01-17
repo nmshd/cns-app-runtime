@@ -8,7 +8,7 @@ export class RelationshipEventingRevokeTest extends AbstractTest {
         const that = this
 
         describe("RelationshipEventingRevokeTest", function () {
-            this.timeout(20000)
+            this.timeout(60000)
 
             let sessionA: LocalAccountSession
             let sessionB: LocalAccountSession
@@ -66,7 +66,7 @@ export class RelationshipEventingRevokeTest extends AbstractTest {
                     relationshipChangedEvent.data.id
                 )
                 expect(onboardingChangeReceivedEvent.data.relationship).to.eq(relationshipChangedEvent.data)
-            }).timeout(10000)
+            })
 
             it("should fire events on the requestor when relationship request was revoked (by requestor itself)", async function () {
                 const eventListenerFrom = new EventListener(that.runtime, [RelationshipChangedEvent], sessionB)
@@ -120,7 +120,7 @@ export class RelationshipEventingRevokeTest extends AbstractTest {
                 )
 
                 expect(onboardingChangeReceivedEvent.data.relationship).to.eq(relationshipChangedEvent.data)
-            }).timeout(10000)
+            })
 
             after(async function () {
                 await that.runtime.stop()
