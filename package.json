@@ -1,6 +1,6 @@
 {
     "name": "@nmshd/app-runtime",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "The App Runtime",
     "homepage": "https://enmeshed.eu",
     "repository": "github:nmshd/cns-app-runtime",
@@ -38,7 +38,7 @@
     "dependencies": {
         "@js-soft/docdb-access-loki": "^1.0.2",
         "@js-soft/native-abstractions": "^1.0.3",
-        "@nmshd/runtime": "1.2.13",
+        "@nmshd/runtime": "1.2.14",
         "lodash": "^4.17.21"
     },
     "devDependencies": {
@@ -51,7 +51,7 @@
         "@types/luxon": "^2.0.9",
         "@types/mocha": "^9.0.0",
         "@types/node": "^17.0.9",
-        "bt-runner": "^1.0.21",
+        "bt-runner": "^2.0.0",
         "chai": "^4.3.4",
         "copy-webpack-plugin": "^10.2.0",
         "eslint": "^8.7.0",
