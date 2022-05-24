@@ -139,7 +139,6 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
     }
 
     private subscriptionIdTokenRegistration: number
-    private subscriptionIdAccountSelection: number
     private subscriptionIdRemoteNotification: number
 
     public start(): void {
@@ -164,10 +163,8 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
                 .logWith(this.logger)
         }
         this.subscriptionIdTokenRegistration = tokenRegistrationResult.value
-        this.subscriptionIdAccountSelection = this.runtime.eventBus.subscribe(
-            AccountSelectedEvent,
-            this.handleAccountSelectedEvent.bind(this)
-        )
+
+        this.subscribeToEvent(AccountSelectedEvent, this.handleAccountSelectedEvent.bind(this))
     }
 
     public stop(): void {
@@ -199,10 +196,6 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
             }
         }
 
-        if (!this.subscriptionIdAccountSelection) {
-            this.logger.warn("No AccountSelectedEvent subscription available.")
-        } else {
-            this.runtime.eventBus.unsubscribe(AccountSelectedEvent, this.subscriptionIdAccountSelection)
-        }
+        this.unsubscribeFromAllEvents()
     }
 }

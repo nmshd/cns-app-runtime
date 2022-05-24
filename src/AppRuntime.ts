@@ -4,8 +4,8 @@ import { ILoggerFactory } from "@js-soft/logging-abstractions"
 import { INativeBootstrapper, INativeEnvironment, INativeTranslationProvider } from "@js-soft/native-abstractions"
 import { Result } from "@js-soft/ts-utils"
 import { ConsumptionController } from "@nmshd/consumption"
-import { DataViewExpander, ModuleConfiguration, Runtime, RuntimeHealth } from "@nmshd/runtime"
-import { AccountController, CoreId } from "@nmshd/transport"
+import { ModuleConfiguration, Runtime, RuntimeHealth, RuntimeServices } from "@nmshd/runtime"
+import { AccountController, CoreId, ICoreAddress } from "@nmshd/transport"
 import { AppConfig, AppConfigOverwrite, createAppConfig } from "./AppConfig"
 import { AppRuntimeErrors } from "./AppRuntimeErrors"
 import { AccountSelectedEvent, RelationshipSelectedEvent } from "./events"
@@ -24,6 +24,10 @@ import {
 import { AccountServices, LocalAccountDTO, LocalAccountMapper, MultiAccountController } from "./multiAccount"
 import { LocalAccountSession } from "./multiAccount/data/LocalAccountSession"
 import { UserfriendlyResult } from "./UserfriendlyResult"
+
+export interface AppRuntimeServices extends RuntimeServices {
+    appServices: AppServices
+}
 
 export class AppRuntime extends Runtime<AppConfig> {
     public constructor(public readonly nativeBootstrapper: INativeBootstrapper, appConfig: AppConfig) {
@@ -75,22 +79,9 @@ export class AppRuntime extends Runtime<AppConfig> {
         return this._multiAccountController
     }
 
-    public get expander(): DataViewExpander {
-        return this.getDataViewExpander()
-    }
-
     private _accountServices: AccountServices
     public get accountServices(): AccountServices {
         return this._accountServices
-    }
-
-    private _appServices?: AppServices
-    public get appServices(): AppServices {
-        if (!this._appServices) {
-            throw AppRuntimeErrors.general.appServicesUnavailable().logWith(this.logger)
-        }
-
-        return this._appServices
     }
 
     private readonly _nativeEnvironment: INativeEnvironment
@@ -105,12 +96,20 @@ export class AppRuntime extends Runtime<AppConfig> {
         return this._currentSession.account
     }
 
-    protected login(accountController: AccountController, consumptionController: ConsumptionController): this {
-        super.login(accountController, consumptionController)
+    protected async login(
+        accountController: AccountController,
+        consumptionController: ConsumptionController
+    ): Promise<AppRuntimeServices> {
+        const services = await super.login(accountController, consumptionController)
 
-        this._appServices = new AppServices(this)
+        const appServices = new AppServices(
+            this,
+            services.transportServices,
+            services.consumptionServices,
+            services.dataViewExpander
+        )
 
-        return this
+        return { ...services, appServices: appServices }
     }
 
     private _currentSession?: LocalAccountSession
@@ -119,6 +118,22 @@ export class AppRuntime extends Runtime<AppConfig> {
             throw AppRuntimeErrors.general.currentSessionUnavailable()
         }
         return this._currentSession
+    }
+
+    public getServices(address: string | ICoreAddress): AppRuntimeServices {
+        const addressString = typeof address === "string" ? address : address.toString()
+
+        const session = this._availableSessions.find((session) => session.address === addressString)
+        if (!session) {
+            throw new Error(`Account ${addressString} not logged in.`)
+        }
+
+        return {
+            transportServices: session.transportServices,
+            consumptionServices: session.consumptionServices,
+            appServices: session.appServices,
+            dataViewExpander: session.expander
+        }
     }
 
     private readonly _availableSessions: LocalAccountSession[] = []
@@ -178,7 +193,7 @@ export class AppRuntime extends Runtime<AppConfig> {
         }
 
         if (availableSession) {
-            this.login(availableSession.accountController, availableSession.consumptionController)
+            await this.login(availableSession.accountController, availableSession.consumptionController)
             this._currentSession = availableSession
             this.eventBus.publish(new AccountSelectedEvent(availableSession.address, availableSession.account.id))
             return availableSession.account
@@ -205,16 +220,16 @@ export class AppRuntime extends Runtime<AppConfig> {
         }
         const consumptionController = await new ConsumptionController(this.transport, accountController).init()
 
-        this.login(accountController, consumptionController)
+        const services = await this.login(accountController, consumptionController)
 
         this.logger.debug(`Finished login to ${accountId}.`)
         const session = {
             address: localAccount.address.toString(),
             account: LocalAccountMapper.toLocalAccountDTO(localAccount),
-            consumptionServices: this.consumptionServices,
-            transportServices: this.transportServices,
-            expander: this.getDataViewExpander(),
-            appServices: this.appServices,
+            consumptionServices: services.consumptionServices,
+            transportServices: services.transportServices,
+            expander: services.dataViewExpander,
+            appServices: services.appServices,
             accountController: accountController,
             consumptionController: consumptionController
         }
@@ -259,7 +274,7 @@ export class AppRuntime extends Runtime<AppConfig> {
             return
         }
 
-        const result = await this.appServices.relationships.renderRelationship(id)
+        const result = await this.currentSession.appServices.relationships.renderRelationship(id)
         if (result.isError) {
             throw result.error
         }
@@ -368,11 +383,11 @@ export class AppRuntime extends Runtime<AppConfig> {
 
         const connectorModuleConfiguration = moduleConfiguration as AppRuntimeModuleConfiguration
 
-        const module = new moduleConstructor()
-
-        module.runtime = this
-        module.configuration = connectorModuleConfiguration
-        module.logger = this.loggerFactory.getLogger(moduleConstructor)
+        const module = new moduleConstructor(
+            this,
+            connectorModuleConfiguration,
+            this.loggerFactory.getLogger(moduleConstructor)
+        )
 
         this.modules.add(module)
 

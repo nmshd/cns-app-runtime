@@ -12,7 +12,11 @@ export class MessageReceivedModule extends AppRuntimeModule<MessageReceivedModul
         // Nothing to do here
     }
 
-    private async messageReceivedEventListener(event: MessageReceivedEvent) {
+    public start(): void {
+        this.subscribeToEvent(MessageReceivedEvent, this.handleMessageReceived.bind(this))
+    }
+
+    private async handleMessageReceived(event: MessageReceivedEvent) {
         const message = event.data
         const session = this.runtime.findSessionByAddress(event.eventTargetAddress)
         if (!session) {
@@ -40,22 +44,7 @@ export class MessageReceivedModule extends AppRuntimeModule<MessageReceivedModul
         }
     }
 
-    private subscriptionId: number
-
-    public start(): void {
-        const subscriptionId = this.runtime.eventBus.subscribe(
-            MessageReceivedEvent,
-            this.messageReceivedEventListener.bind(this)
-        )
-        this.subscriptionId = subscriptionId
-    }
-
     public stop(): void {
-        if (!this.subscriptionId) {
-            this.logger.warn("No Subscription available.")
-            return
-        }
-
-        this.runtime.eventBus.unsubscribe(MessageReceivedEvent, this.subscriptionId)
+        this.unsubscribeFromAllEvents()
     }
 }

@@ -12,7 +12,7 @@ export class AppLaunchModule extends AppRuntimeModule<AppLaunchModuleConfig> {
     }
 
     private async urlOpenEventListener(event: UrlOpenEvent) {
-        await this.runtime.appServices.stringProcessor.processURL(event.url)
+        await this.runtime.currentSession.appServices.stringProcessor.processURL(event.url)
     }
 
     private urlOpenSubscriptionId: number

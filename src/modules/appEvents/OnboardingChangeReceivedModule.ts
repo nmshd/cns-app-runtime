@@ -1,6 +1,6 @@
 import { RelationshipChangeStatus } from "@nmshd/runtime"
 import { AppRuntimeError } from "../../AppRuntimeError"
-import { MailReceivedEvent, OnboardingChangeReceivedEvent } from "../../events"
+import { OnboardingChangeReceivedEvent } from "../../events"
 import { AppRuntimeModule, AppRuntimeModuleConfiguration } from "../AppRuntimeModule"
 
 export interface OnboardingChangeReceivedModuleConfig extends AppRuntimeModuleConfiguration {}
@@ -12,7 +12,11 @@ export class OnboardingChangeReceivedModule extends AppRuntimeModule<OnboardingC
         // Nothing to do here
     }
 
-    private async onboardingChangeReceivedHandler(event: OnboardingChangeReceivedEvent) {
+    public start(): void {
+        this.subscribeToEvent(OnboardingChangeReceivedEvent, this.handleOnboardingChangeReceived.bind(this))
+    }
+
+    private async handleOnboardingChangeReceived(event: OnboardingChangeReceivedEvent) {
         const change = event.data.change
         const identity = event.data.identity
         let title = ""
@@ -50,22 +54,7 @@ export class OnboardingChangeReceivedModule extends AppRuntimeModule<OnboardingC
         })
     }
 
-    private subscriptionId: number
-
-    public start(): void {
-        const subscriptionId = this.runtime.eventBus.subscribe(
-            OnboardingChangeReceivedEvent,
-            this.onboardingChangeReceivedHandler.bind(this)
-        )
-        this.subscriptionId = subscriptionId
-    }
-
     public stop(): void {
-        if (!this.subscriptionId) {
-            this.logger.warn("No Subscription available.")
-            return
-        }
-
-        this.runtime.eventBus.unsubscribe(MailReceivedEvent, this.subscriptionId)
+        this.unsubscribeFromAllEvents()
     }
 }

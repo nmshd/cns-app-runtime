@@ -1,4 +1,4 @@
-import { SerializableAsync } from "@js-soft/ts-serval"
+import { Serializable } from "@js-soft/ts-serval"
 import { TokenContentDeviceSharedSecret, TokenContentRelationshipTemplate } from "@nmshd/transport"
 import { AppRuntimeErrors } from "../../AppRuntimeErrors"
 import { LocalAccountDTO } from "../../multiAccount/data/LocalAccountDTO"
@@ -44,14 +44,13 @@ export class AppStringProcessorFacade extends AppRuntimeFacade {
         const uiBridge = await this.runtime.uiBridge()
 
         try {
-            const tokenContent = await SerializableAsync.fromUnknown(content)
+            const tokenContent = Serializable.fromUnknown(content)
 
             if (tokenContent instanceof TokenContentRelationshipTemplate) {
-                const templateResult =
-                    await this.runtime.transportServices.relationshipTemplates.loadPeerRelationshipTemplate({
-                        id: tokenContent.templateId.toString(),
-                        secretKey: tokenContent.secretKey.toBase64()
-                    })
+                const templateResult = await this.transportServices.relationshipTemplates.loadPeerRelationshipTemplate({
+                    id: tokenContent.templateId.toString(),
+                    secretKey: tokenContent.secretKey.toBase64()
+                })
                 if (templateResult.isError) {
                     return await this.parseErrorResult<void>(templateResult)
                 }

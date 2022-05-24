@@ -5,15 +5,12 @@ import { UserfriendlyApplicationError } from "../../UserfriendlyApplicationError
 import { UserfriendlyResult } from "../../UserfriendlyResult"
 
 export abstract class AppRuntimeFacade {
-    protected readonly transportServices: TransportServices
-    protected readonly consumptionServices: ConsumptionServices
-    protected readonly expander: DataViewExpander
-
-    public constructor(protected readonly runtime: AppRuntime) {
-        this.transportServices = runtime.transportServices
-        this.consumptionServices = runtime.consumptionServices
-        this.expander = runtime.expander
-    }
+    public constructor(
+        protected readonly runtime: AppRuntime,
+        protected readonly transportServices: TransportServices,
+        protected readonly consumptionServices: ConsumptionServices,
+        protected readonly expander: DataViewExpander
+    ) {}
 
     protected async parseErrorResult<T>(result: Result<any>): Promise<Result<T, UserfriendlyApplicationError>> {
         const userfriendlyMessageResult = await this.runtime.translate(result.error.code)

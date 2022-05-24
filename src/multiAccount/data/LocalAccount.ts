@@ -37,6 +37,6 @@ export class LocalAccount extends CoreSerializable implements ILocalAccount {
     public order: number
 
     public static from(value: ILocalAccount): LocalAccount {
-        return super.from(value, LocalAccount) as LocalAccount
+        return this.fromAny(value)
     }
 }

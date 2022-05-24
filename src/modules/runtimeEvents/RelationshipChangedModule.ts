@@ -12,7 +12,11 @@ export class RelationshipChangedModule extends AppRuntimeModule<RelationshipChan
         // Nothing to do here
     }
 
-    private async relationshipChangedHandler(event: RelationshipChangedEvent) {
+    public start(): void {
+        this.subscribeToEvent(RelationshipChangedEvent, this.handleRelationshipChanged.bind(this))
+    }
+
+    private async handleRelationshipChanged(event: RelationshipChangedEvent) {
         const relationship = event.data
         const session = this.runtime.findSessionByAddress(event.eventTargetAddress)
         if (!session) {
@@ -41,22 +45,7 @@ export class RelationshipChangedModule extends AppRuntimeModule<RelationshipChan
         }
     }
 
-    private subscriptionId: number
-
-    public start(): void {
-        const subscriptionId = this.runtime.eventBus.subscribe(
-            RelationshipChangedEvent,
-            this.relationshipChangedHandler.bind(this)
-        )
-        this.subscriptionId = subscriptionId
-    }
-
     public stop(): void {
-        if (!this.subscriptionId) {
-            this.logger.warn("No Subscription available.")
-            return
-        }
-
-        this.runtime.eventBus.unsubscribe(RelationshipChangedEvent, this.subscriptionId)
+        this.unsubscribeFromAllEvents()
     }
 }
