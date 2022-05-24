@@ -18,7 +18,7 @@ export class MultiAccountFacade {
     }
 
     public async onboardAccount(onboardingInfo: DeviceOnboardingInfoDTO): Promise<UserfriendlyResult<LocalAccountDTO>> {
-        const sharedSecret = await DeviceMapper.toDeviceSharedSecret(onboardingInfo)
+        const sharedSecret = DeviceMapper.toDeviceSharedSecret(onboardingInfo)
         const [localAccount] = await this.multiAccountController.onboardDevice(sharedSecret)
         const localAccountDTO = LocalAccountMapper.toLocalAccountDTO(localAccount)
         return UserfriendlyResult.ok(localAccountDTO)
