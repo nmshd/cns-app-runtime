@@ -53,6 +53,18 @@ export function createAppConfig(...configs: AppConfigOverwrite[]): AppConfig {
                 displayName: "Relationship Changed Module",
                 location: "relationshipChanged",
                 enabled: true
+            },
+            decider: {
+                displayName: "Decider Module",
+                name: "DeciderModule",
+                location: "@nmshd/runtime:DeciderModule",
+                enabled: true
+            },
+            request: {
+                displayName: "Request Module",
+                name: "RequestModule",
+                location: "@nmshd/runtime:RequestModule",
+                enabled: true
             }
         }
     }
