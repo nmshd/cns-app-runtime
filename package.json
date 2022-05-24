@@ -1,6 +1,6 @@
 {
     "name": "@nmshd/app-runtime",
-    "version": "1.0.6",
+    "version": "2.0.0-alpha.1",
     "description": "The App Runtime",
     "homepage": "https://enmeshed.eu",
     "repository": "github:nmshd/cns-app-runtime",
