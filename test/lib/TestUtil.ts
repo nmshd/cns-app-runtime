@@ -1,7 +1,7 @@
 import { ILoggerFactory } from "@js-soft/logging-abstractions"
 import { SimpleLoggerFactory } from "@js-soft/simple-logger"
-import { SerializableAsync } from "@js-soft/ts-serval"
-import { Result, sleep } from "@js-soft/ts-utils"
+import { Serializable } from "@js-soft/ts-serval"
+import { Result, sleep, SubscriptionTarget } from "@js-soft/ts-utils"
 import { AppRuntime, LocalAccountDTO, LocalAccountSession } from "@nmshd/app-runtime"
 import { FileDTO, MessageDTO, RelationshipDTO, RelationshipTemplateDTO, SyncEverythingResponse } from "@nmshd/runtime"
 import { CoreDate, Realm, TransportLoggerFactory } from "@nmshd/transport"
@@ -20,32 +20,53 @@ export class TestUtil {
         TransportLoggerFactory.init(this.oldLogger)
     }
 
-    public static async awaitEvent<T>(runtime: AppRuntime, event: Function | string, timeoutInMS = 0): Promise<T> {
-        return await new Promise((resolve, reject) => {
-            let timeoutTimer: any
-            if (timeoutInMS > 0) {
-                timeoutTimer = setTimeout(
-                    () =>
-                        reject(
-                            new Error(
-                                `Timeout of ${timeoutInMS}ms reached for event ${
-                                    typeof event === "string" ? event : event.name
-                                }.`
-                            )
-                        ),
-                    timeoutInMS
-                )
-            }
+    public static async awaitEvent<TEvent>(
+        runtime: AppRuntime,
+        subscriptionTarget: SubscriptionTarget<TEvent>,
+        timeout?: number,
+        assertionFunction?: (t: TEvent) => boolean
+    ): Promise<TEvent> {
+        const eventBus = runtime.eventBus
+        let subscriptionId: number
 
-            runtime.eventBus.subscribeOnce<T>(event, (e) => {
-                clearTimeout(timeoutTimer)
-                resolve(e)
+        const eventPromise = new Promise<TEvent>((resolve) => {
+            subscriptionId = eventBus.subscribe(subscriptionTarget, (event: TEvent) => {
+                if (assertionFunction && !assertionFunction(event)) return
+
+                resolve(event)
             })
+        })
+        if (!timeout) {
+            return await eventPromise.finally(() => eventBus.unsubscribe(subscriptionTarget, subscriptionId))
+        }
+
+        let timeoutId: NodeJS.Timeout
+        const timeoutPromise = new Promise<TEvent>((_resolve, reject) => {
+            timeoutId = setTimeout(
+                () =>
+                    reject(
+                        new Error(
+                            `timeout exceeded for waiting for event ${
+                                typeof subscriptionTarget === "string" ? subscriptionTarget : subscriptionTarget.name
+                            }`
+                        )
+                    ),
+                timeout
+            )
+        })
+
+        return await Promise.race([eventPromise, timeoutPromise]).finally(() => {
+            eventBus.unsubscribe(subscriptionTarget, subscriptionId)
+            clearTimeout(timeoutId)
         })
     }
 
-    public static async expectEvent<T>(runtime: AppRuntime, event: Function | string, timeoutInMS = 1000): Promise<T> {
-        const eventInstance: T = await this.awaitEvent(runtime, event, timeoutInMS)
+    public static async expectEvent<T>(
+        runtime: AppRuntime,
+        subscriptionTarget: SubscriptionTarget<T>,
+        timeoutInMS = 1000
+    ): Promise<T> {
+        const eventInstance: T = await this.awaitEvent(runtime, subscriptionTarget, timeoutInMS)
         expect(eventInstance, "Event received").to.exist
         return eventInstance
     }
@@ -327,7 +348,7 @@ export class TestUtil {
             addresses.push(identityInfo.address)
         }
         if (!content) {
-            content = await SerializableAsync.from({ content: "TestContent" }, SerializableAsync)
+            content = Serializable.fromUnknown({ content: "TestContent" })
         }
         return (
             await from.transportServices.messages.sendMessage({

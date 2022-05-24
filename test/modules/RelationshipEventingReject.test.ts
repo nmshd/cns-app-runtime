@@ -36,8 +36,9 @@ export class RelationshipEventingRejectTest extends AbstractTest {
                     sessionA
                 )
                 eventListener.start()
-                await TestUtil.syncUntilHasRelationship(sessionA, requestTo.id)
-                await eventListener.waitFor(OnboardingChangeReceivedEvent)
+                await eventListener.waitFor(OnboardingChangeReceivedEvent, () =>
+                    TestUtil.syncUntilHasRelationship(sessionA, requestTo.id)
+                )
                 eventListener.stop()
                 const events = eventListener.getReceivedEvents()
                 expect(events).to.be.of.length(2)
@@ -53,9 +54,9 @@ export class RelationshipEventingRejectTest extends AbstractTest {
                 expect(onboardingChangeReceivedEvent.data.change.status).to.eq(RelationshipChangeStatus.Pending)
                 expect(onboardingChangeReceivedEvent.data.change).to.eq(relationshipChangedEvent.data.changes[0])
                 expect(onboardingChangeReceivedEvent.data.identity).to.exist
-                expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
-                    sessionB.accountController.identity.address.toString().substring(3, 9)
-                )
+                // expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
+                //     sessionB.accountController.identity.address.toString().substring(3, 9)
+                // )
                 expect(onboardingChangeReceivedEvent.data.identity.id).to.eq(
                     sessionB.accountController.identity.address.toString()
                 )
@@ -86,8 +87,9 @@ export class RelationshipEventingRejectTest extends AbstractTest {
                     sessionB
                 )
                 eventListenerTo.start()
-                await TestUtil.syncUntilHasRelationship(sessionB, relationshipId)
-                await eventListenerTo.waitFor(OnboardingChangeReceivedEvent)
+                await eventListenerTo.waitFor(OnboardingChangeReceivedEvent, () =>
+                    TestUtil.syncUntilHasRelationship(sessionB, relationshipId)
+                )
                 eventListenerTo.stop()
 
                 const events = eventListenerTo.getReceivedEvents()
@@ -105,9 +107,9 @@ export class RelationshipEventingRejectTest extends AbstractTest {
                 expect(onboardingChangeReceivedEvent.data.change).to.eq(relationshipChangedEvent.data.changes[0])
                 expect(onboardingChangeReceivedEvent.data.identity).to.exist
 
-                expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
-                    sessionA.accountController.identity.address.toString().substring(3, 9)
-                )
+                // expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
+                //     sessionA.accountController.identity.address.toString().substring(3, 9)
+                // )
                 expect(onboardingChangeReceivedEvent.data.identity.id).to.eq(
                     sessionA.accountController.identity.address.toString()
                 )

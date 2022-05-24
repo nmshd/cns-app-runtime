@@ -1,3 +1,4 @@
+import { SubscriptionTarget } from "@js-soft/ts-utils"
 import { LocalAccountSession } from "@nmshd/app-runtime"
 import { DataEvent, Event, Runtime } from "@nmshd/runtime"
 
@@ -9,7 +10,7 @@ export class EventWrapper {
 export class EventListener {
     public constructor(
         public readonly runtime: Runtime,
-        public readonly listeningTo: (string | Function)[],
+        public readonly listeningTo: SubscriptionTarget<Event>[],
         public readonly session?: LocalAccountSession
     ) {}
 
@@ -37,13 +38,15 @@ export class EventListener {
         }
     }
 
-    public async waitFor(event: string | Function): Promise<any> {
+    public async waitFor(event: string | Function, concurrentOperation?: () => Promise<any>): Promise<any> {
         this.promiseCallbacks = undefined
         this.waitingForEvent = typeof event === "function" ? event.name : event
         const promise = new Promise((resolve, reject) => {
             this.promiseCallbacks = { resolve: resolve, reject: reject }
         })
-        return await promise
+
+        const values = await Promise.all([promise, concurrentOperation?.()])
+        return values[0]
     }
 
     public start(): void {
