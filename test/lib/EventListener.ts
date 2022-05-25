@@ -30,7 +30,7 @@ export class EventListener {
                 return
             }
         }
-        this.receivedEvents.push({ namespace: namespace, instance: eventInstance })
+        this.receivedEvents.push({ namespace, instance: eventInstance })
         if (this.waitingForEvent && this.waitingForEvent === namespace) {
             if (this.promiseCallbacks) {
                 this.promiseCallbacks.resolve()
@@ -42,7 +42,7 @@ export class EventListener {
         this.promiseCallbacks = undefined
         this.waitingForEvent = typeof event === "function" ? event.name : event
         const promise = new Promise((resolve, reject) => {
-            this.promiseCallbacks = { resolve: resolve, reject: reject }
+            this.promiseCallbacks = { resolve, reject }
         })
 
         const values = await Promise.all([promise, concurrentOperation?.()])

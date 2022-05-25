@@ -109,7 +109,7 @@ export class AppRuntime extends Runtime<AppConfig> {
             services.dataViewExpander
         )
 
-        return { ...services, appServices: appServices }
+        return { ...services, appServices }
     }
 
     private _currentSession?: LocalAccountSession
@@ -230,8 +230,8 @@ export class AppRuntime extends Runtime<AppConfig> {
             transportServices: services.transportServices,
             expander: services.dataViewExpander,
             appServices: services.appServices,
-            accountController: accountController,
-            consumptionController: consumptionController
+            accountController,
+            consumptionController
         }
         this._availableSessions.push(session)
         this._currentSession = session

@@ -74,7 +74,7 @@ export class MultiAccountController {
     }
 
     public async getAccountByAddress(address: string): Promise<LocalAccount> {
-        const dbAccount = await this._localAccounts.findOne({ address: address })
+        const dbAccount = await this._localAccounts.findOne({ address })
         if (!dbAccount) {
             throw TransportErrors.general.recordNotFound(LocalAccount, address).logWith(this._log)
         }
@@ -166,8 +166,8 @@ export class MultiAccountController {
         let localAccount: LocalAccount = LocalAccount.from({
             id,
             directory: ".",
-            realm: realm,
-            name: name,
+            realm,
+            name,
             order: -1
         })
         await this._localAccounts.create(localAccount)

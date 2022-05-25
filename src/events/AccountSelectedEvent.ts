@@ -5,9 +5,9 @@ export class AccountSelectedEvent extends DataEvent<{ localAccountId: string; ad
 
     /**
      * Create an AccountSelected Event
-     * @param accountId The accountId of the selected account.
+     * @param localAccountId The accountId of the selected account.
      */
-    public constructor(address: string, accountId: string) {
-        super(AccountSelectedEvent.namespace, address, { localAccountId: accountId, address: address })
+    public constructor(address: string, localAccountId: string) {
+        super(AccountSelectedEvent.namespace, address, { localAccountId, address })
     }
 }

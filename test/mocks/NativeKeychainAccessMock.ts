@@ -8,10 +8,7 @@ export class NativeKeychainAccessMock implements INativeKeychainAccess {
         return Promise.resolve(Result.ok(this.keys[name]))
     }
     public set(key: string, value: any): Promise<Result<void>> {
-        this.keys[key] = {
-            key: key,
-            value: value
-        }
+        this.keys[key] = { key, value }
         return Promise.resolve(Result.ok(undefined))
     }
     public delete(key: string /* , value: any */): Promise<Result<void>> {

@@ -14,7 +14,7 @@ export class NativeFileAccessMock implements INativeFileAccess {
             Result.ok({
                 name: "MockFileName",
                 path: `${path}`,
-                storage: storage,
+                storage,
                 mimeType: "plain/txt",
                 size: 50,
                 modifiedAt: "1990-12-31T00:00:00Z"
@@ -44,8 +44,8 @@ export class NativeFileAccessMock implements INativeFileAccess {
                 directories: [],
                 metadata: {
                     modifiedAt: "1990-12-31T00:00:00Z",
-                    path: path,
-                    storage: storage
+                    path,
+                    storage
                 }
             })
         )

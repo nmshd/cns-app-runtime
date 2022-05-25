@@ -141,7 +141,7 @@ export class TestUtil {
     ): Promise<RelationshipTemplateDTO> {
         const templateFrom = (
             await from.transportServices.relationshipTemplates.createOwnRelationshipTemplate({
-                content: content,
+                content,
                 expiresAt: CoreDate.utc().add({ minutes: 5 }).toString(),
                 maxNumberOfRelationships: 1
             })
@@ -168,10 +168,7 @@ export class TestUtil {
             mycontent: "request"
         }
     ): Promise<RelationshipDTO> {
-        const relRequest = await from.transportServices.relationships.createRelationship({
-            templateId: templateId,
-            content: content
-        })
+        const relRequest = await from.transportServices.relationships.createRelationship({ templateId, content })
         return relRequest.value
     }
 
@@ -191,8 +188,8 @@ export class TestUtil {
         const acceptedRelationship = (
             await session.transportServices.relationships.acceptRelationshipChange({
                 changeId: relationship.changes[0].id,
-                content: content,
-                relationshipId: relationshipId
+                content,
+                relationshipId
             })
         ).value
         return acceptedRelationship
@@ -214,8 +211,8 @@ export class TestUtil {
         const rejectedRelationship = (
             await session.transportServices.relationships.rejectRelationshipChange({
                 changeId: relationship.changes[0].id,
-                content: content,
-                relationshipId: relationshipId
+                content,
+                relationshipId
             })
         ).value
         return rejectedRelationship
@@ -237,8 +234,8 @@ export class TestUtil {
         const rejectedRelationship = (
             await session.transportServices.relationships.revokeRelationshipChange({
                 changeId: relationship.changes[0].id,
-                content: content,
-                relationshipId: relationshipId
+                content,
+                relationshipId
             })
         ).value
         return rejectedRelationship
@@ -339,24 +336,20 @@ export class TestUtil {
     public static async sendMessagesWithFiles(
         from: LocalAccountSession,
         recipients: LocalAccountSession[],
-        files: string[],
+        attachments: string[],
         content?: any
     ): Promise<MessageDTO> {
-        const addresses: string[] = []
-        for (const session of recipients) {
-            const identityInfo = (await session.transportServices.account.getIdentityInfo()).value
-            addresses.push(identityInfo.address)
-        }
         if (!content) {
             content = Serializable.fromUnknown({ content: "TestContent" })
         }
-        return (
-            await from.transportServices.messages.sendMessage({
-                recipients: addresses,
-                content: content,
-                attachments: files
-            })
-        ).value
+
+        const result = await from.transportServices.messages.sendMessage({
+            recipients: recipients.map((r) => r.address),
+            content,
+            attachments
+        })
+
+        return result.value
     }
 
     public static async uploadFile(session: LocalAccountSession, fileContent: Uint8Array): Promise<FileDTO> {
