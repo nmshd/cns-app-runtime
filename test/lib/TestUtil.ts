@@ -330,10 +330,10 @@ export class TestUtil {
         to: LocalAccountSession,
         content?: any
     ): Promise<MessageDTO> {
-        return await this.sendMessagesWithFiles(from, [to], [], content)
+        return await this.sendMessagesWithAttachments(from, [to], [], content)
     }
 
-    public static async sendMessagesWithFiles(
+    public static async sendMessagesWithAttachments(
         from: LocalAccountSession,
         recipients: LocalAccountSession[],
         attachments: string[],

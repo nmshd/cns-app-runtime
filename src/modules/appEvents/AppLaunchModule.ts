@@ -11,7 +11,7 @@ export class AppLaunchModule extends AppRuntimeModule<AppLaunchModuleConfig> {
         // Nothing to do here
     }
 
-    private async urlOpenEventListener(event: UrlOpenEvent) {
+    private async handleUrlOpen(event: UrlOpenEvent) {
         await this.runtime.currentSession.appServices.stringProcessor.processURL(event.url)
     }
 
@@ -20,7 +20,7 @@ export class AppLaunchModule extends AppRuntimeModule<AppLaunchModuleConfig> {
     public start(): void {
         const subscriptionResult = this.runtime.nativeEnvironment.eventBus.subscribe(
             UrlOpenEvent,
-            this.urlOpenEventListener.bind(this)
+            this.handleUrlOpen.bind(this)
         )
         if (subscriptionResult.isError) {
             this.logger.error(subscriptionResult.error)

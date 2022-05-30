@@ -16,7 +16,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         // Nothing to do here
     }
 
-    private async handleRemoteNotificationEvent(event: RemoteNotificationEvent) {
+    private async handleRemoteNotification(event: RemoteNotificationEvent) {
         this.logger.trace("PushNotificationModule.handleRemoteNotificationEvent", event)
         const notification: INativePushNotification = event.notification
         const content: IBackboneEventContent = notification.content as IBackboneEventContent
@@ -144,7 +144,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
     public start(): void {
         const remoteNotificationResult = this.runtime.nativeEnvironment.eventBus.subscribe(
             RemoteNotificationEvent,
-            this.handleRemoteNotificationEvent.bind(this)
+            this.handleRemoteNotification.bind(this)
         )
         if (remoteNotificationResult.isError) {
             throw AppRuntimeErrors.modules.pushNotificationModule
