@@ -17,7 +17,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
     }
 
     private async handleRemoteNotification(event: RemoteNotificationEvent) {
-        this.logger.trace("PushNotificationModule.handleRemoteNotificationEvent", event)
+        this.logger.trace("PushNotificationModule.handleRemoteNotification", event)
         const notification: INativePushNotification = event.notification
         const content: IBackboneEventContent = notification.content as IBackboneEventContent
 
@@ -62,9 +62,9 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         }
     }
 
-    private async handleTokenRegistrationEvent(event: RemoteNotificationRegistrationEvent) {
+    private async handleTokenRegistration(event: RemoteNotificationRegistrationEvent) {
         try {
-            this.logger.trace("PushNotificationModule.handleTokenRegistrationEvent", event)
+            this.logger.trace("PushNotificationModule.handleTokenRegistration", event)
 
             for (const account of this.runtime.getSessions()) {
                 await this.registerPushTokenForLocalAccount(account.id, event.token)
@@ -74,9 +74,9 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         }
     }
 
-    private async handleAccountSelectedEvent(event: AccountSelectedEvent) {
+    private async handleAccountSelected(event: AccountSelectedEvent) {
         try {
-            this.logger.trace("PushNotificationModule.handleAccountSelectedEvent", event)
+            this.logger.trace("PushNotificationModule.handleAccountSelected", event)
             const tokenResult = this.getNotificationTokenFromConfig()
             if (tokenResult.isSuccess) {
                 await this.registerPushTokenForLocalAccount(event.data.localAccountId, tokenResult.value)
@@ -155,7 +155,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
 
         const tokenRegistrationResult = this.runtime.nativeEnvironment.eventBus.subscribe(
             RemoteNotificationRegistrationEvent,
-            this.handleTokenRegistrationEvent.bind(this)
+            this.handleTokenRegistration.bind(this)
         )
         if (tokenRegistrationResult.isError) {
             throw AppRuntimeErrors.modules.pushNotificationModule
@@ -164,7 +164,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         }
         this.subscriptionIdTokenRegistration = tokenRegistrationResult.value
 
-        this.subscribeToEvent(AccountSelectedEvent, this.handleAccountSelectedEvent.bind(this))
+        this.subscribeToEvent(AccountSelectedEvent, this.handleAccountSelected.bind(this))
     }
 
     public stop(): void {
