@@ -145,7 +145,6 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
     }
 
     public stop(): void {
-        this.unsubscribeFromAllNativeEvents()
         this.unsubscribeFromAllEvents()
     }
 }

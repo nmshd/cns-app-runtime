@@ -24,7 +24,9 @@ export abstract class AppRuntimeModule<
         this.registeredNativeEventSubscriptions.push({ id: subscriptionResult.value, target: event })
     }
 
-    protected unsubscribeFromAllNativeEvents(): void {
+    protected override unsubscribeFromAllEvents(): void {
+        super.unsubscribeFromAllEvents()
+
         for (const subscription of this.registeredNativeEventSubscriptions) {
             this.runtime.nativeEnvironment.eventBus.unsubscribe(subscription.target, subscription.id)
         }

@@ -20,6 +20,6 @@ export class AppLaunchModule extends AppRuntimeModule<AppLaunchModuleConfig> {
     }
 
     public stop(): void {
-        this.unsubscribeFromAllNativeEvents()
+        this.unsubscribeFromAllEvents()
     }
 }
