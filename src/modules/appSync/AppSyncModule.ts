@@ -24,9 +24,12 @@ export class AppSyncModule extends AppRuntimeModule<AppSyncModuleConfiguration> 
     }
 
     private async sync(): Promise<void> {
-        const result = await this.runtime.transportServices.account.syncEverything()
-        if (result.isError) {
-            this.logger.error(result.error)
+        for (const session of this.runtime.getSessions()) {
+            const services = this.runtime.getServices(session.address!)
+            const result = await services.transportServices.account.syncEverything()
+            if (result.isError) {
+                this.logger.error(result.error)
+            }
         }
 
         if (this.started) {

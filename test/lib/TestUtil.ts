@@ -1,7 +1,7 @@
 import { ILoggerFactory } from "@js-soft/logging-abstractions"
 import { SimpleLoggerFactory } from "@js-soft/simple-logger"
-import { SerializableAsync } from "@js-soft/ts-serval"
-import { Result, sleep } from "@js-soft/ts-utils"
+import { Serializable } from "@js-soft/ts-serval"
+import { Result, sleep, SubscriptionTarget } from "@js-soft/ts-utils"
 import { AppRuntime, LocalAccountDTO, LocalAccountSession } from "@nmshd/app-runtime"
 import { FileDTO, MessageDTO, RelationshipDTO, RelationshipTemplateDTO, SyncEverythingResponse } from "@nmshd/runtime"
 import { CoreDate, Realm, TransportLoggerFactory } from "@nmshd/transport"
@@ -20,32 +20,53 @@ export class TestUtil {
         TransportLoggerFactory.init(this.oldLogger)
     }
 
-    public static async awaitEvent<T>(runtime: AppRuntime, event: Function | string, timeoutInMS = 0): Promise<T> {
-        return await new Promise((resolve, reject) => {
-            let timeoutTimer: any
-            if (timeoutInMS > 0) {
-                timeoutTimer = setTimeout(
-                    () =>
-                        reject(
-                            new Error(
-                                `Timeout of ${timeoutInMS}ms reached for event ${
-                                    typeof event === "string" ? event : event.name
-                                }.`
-                            )
-                        ),
-                    timeoutInMS
-                )
-            }
+    public static async awaitEvent<TEvent>(
+        runtime: AppRuntime,
+        subscriptionTarget: SubscriptionTarget<TEvent>,
+        timeout?: number,
+        assertionFunction?: (t: TEvent) => boolean
+    ): Promise<TEvent> {
+        const eventBus = runtime.eventBus
+        let subscriptionId: number
 
-            runtime.eventBus.subscribeOnce<T>(event, (e) => {
-                clearTimeout(timeoutTimer)
-                resolve(e)
+        const eventPromise = new Promise<TEvent>((resolve) => {
+            subscriptionId = eventBus.subscribe(subscriptionTarget, (event: TEvent) => {
+                if (assertionFunction && !assertionFunction(event)) return
+
+                resolve(event)
             })
+        })
+        if (!timeout) {
+            return await eventPromise.finally(() => eventBus.unsubscribe(subscriptionTarget, subscriptionId))
+        }
+
+        let timeoutId: NodeJS.Timeout
+        const timeoutPromise = new Promise<TEvent>((_resolve, reject) => {
+            timeoutId = setTimeout(
+                () =>
+                    reject(
+                        new Error(
+                            `timeout exceeded for waiting for event ${
+                                typeof subscriptionTarget === "string" ? subscriptionTarget : subscriptionTarget.name
+                            }`
+                        )
+                    ),
+                timeout
+            )
+        })
+
+        return await Promise.race([eventPromise, timeoutPromise]).finally(() => {
+            eventBus.unsubscribe(subscriptionTarget, subscriptionId)
+            clearTimeout(timeoutId)
         })
     }
 
-    public static async expectEvent<T>(runtime: AppRuntime, event: Function | string, timeoutInMS = 1000): Promise<T> {
-        const eventInstance: T = await this.awaitEvent(runtime, event, timeoutInMS)
+    public static async expectEvent<T>(
+        runtime: AppRuntime,
+        subscriptionTarget: SubscriptionTarget<T>,
+        timeoutInMS = 1000
+    ): Promise<T> {
+        const eventInstance: T = await this.awaitEvent(runtime, subscriptionTarget, timeoutInMS)
         expect(eventInstance, "Event received").to.exist
         return eventInstance
     }
@@ -120,7 +141,7 @@ export class TestUtil {
     ): Promise<RelationshipTemplateDTO> {
         const templateFrom = (
             await from.transportServices.relationshipTemplates.createOwnRelationshipTemplate({
-                content: content,
+                content,
                 expiresAt: CoreDate.utc().add({ minutes: 5 }).toString(),
                 maxNumberOfRelationships: 1
             })
@@ -147,10 +168,7 @@ export class TestUtil {
             mycontent: "request"
         }
     ): Promise<RelationshipDTO> {
-        const relRequest = await from.transportServices.relationships.createRelationship({
-            templateId: templateId,
-            content: content
-        })
+        const relRequest = await from.transportServices.relationships.createRelationship({ templateId, content })
         return relRequest.value
     }
 
@@ -170,8 +188,8 @@ export class TestUtil {
         const acceptedRelationship = (
             await session.transportServices.relationships.acceptRelationshipChange({
                 changeId: relationship.changes[0].id,
-                content: content,
-                relationshipId: relationshipId
+                content,
+                relationshipId
             })
         ).value
         return acceptedRelationship
@@ -193,8 +211,8 @@ export class TestUtil {
         const rejectedRelationship = (
             await session.transportServices.relationships.rejectRelationshipChange({
                 changeId: relationship.changes[0].id,
-                content: content,
-                relationshipId: relationshipId
+                content,
+                relationshipId
             })
         ).value
         return rejectedRelationship
@@ -216,8 +234,8 @@ export class TestUtil {
         const rejectedRelationship = (
             await session.transportServices.relationships.revokeRelationshipChange({
                 changeId: relationship.changes[0].id,
-                content: content,
-                relationshipId: relationshipId
+                content,
+                relationshipId
             })
         ).value
         return rejectedRelationship
@@ -312,30 +330,26 @@ export class TestUtil {
         to: LocalAccountSession,
         content?: any
     ): Promise<MessageDTO> {
-        return await this.sendMessagesWithFiles(from, [to], [], content)
+        return await this.sendMessagesWithAttachments(from, [to], [], content)
     }
 
-    public static async sendMessagesWithFiles(
+    public static async sendMessagesWithAttachments(
         from: LocalAccountSession,
         recipients: LocalAccountSession[],
-        files: string[],
+        attachments: string[],
         content?: any
     ): Promise<MessageDTO> {
-        const addresses: string[] = []
-        for (const session of recipients) {
-            const identityInfo = (await session.transportServices.account.getIdentityInfo()).value
-            addresses.push(identityInfo.address)
-        }
         if (!content) {
-            content = await SerializableAsync.from({ content: "TestContent" }, SerializableAsync)
+            content = Serializable.fromUnknown({ content: "TestContent" })
         }
-        return (
-            await from.transportServices.messages.sendMessage({
-                recipients: addresses,
-                content: content,
-                attachments: files
-            })
-        ).value
+
+        const result = await from.transportServices.messages.sendMessage({
+            recipients: recipients.map((r) => r.address),
+            content,
+            attachments
+        })
+
+        return result.value
     }
 
     public static async uploadFile(session: LocalAccountSession, fileContent: Uint8Array): Promise<FileDTO> {

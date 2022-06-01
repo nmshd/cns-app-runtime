@@ -11,27 +11,15 @@ export class AppLaunchModule extends AppRuntimeModule<AppLaunchModuleConfig> {
         // Nothing to do here
     }
 
-    private async urlOpenEventListener(event: UrlOpenEvent) {
-        await this.runtime.appServices.stringProcessor.processURL(event.url)
+    public start(): void {
+        this.subscribeToNativeEvent(UrlOpenEvent, this.handleUrlOpen.bind(this))
     }
 
-    private urlOpenSubscriptionId: number
-
-    public start(): void {
-        const subscriptionResult = this.runtime.nativeEnvironment.eventBus.subscribe(
-            UrlOpenEvent,
-            this.urlOpenEventListener.bind(this)
-        )
-        if (subscriptionResult.isError) {
-            this.logger.error(subscriptionResult.error)
-        } else {
-            this.urlOpenSubscriptionId = subscriptionResult.value
-        }
+    private async handleUrlOpen(event: UrlOpenEvent) {
+        await this.runtime.currentSession.appServices.stringProcessor.processURL(event.url)
     }
 
     public stop(): void {
-        if (this.urlOpenSubscriptionId) {
-            this.runtime.nativeEnvironment.eventBus.unsubscribe(UrlOpenEvent, this.urlOpenSubscriptionId)
-        }
+        this.unsubscribeFromAllEvents()
     }
 }

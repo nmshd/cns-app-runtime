@@ -16,8 +16,14 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         // Nothing to do here
     }
 
-    private async handleRemoteNotificationEvent(event: RemoteNotificationEvent) {
-        this.logger.trace("PushNotificationModule.handleRemoteNotificationEvent", event)
+    public start(): void {
+        this.subscribeToNativeEvent(RemoteNotificationEvent, this.handleRemoteNotification.bind(this))
+        this.subscribeToNativeEvent(RemoteNotificationRegistrationEvent, this.handleTokenRegistration.bind(this))
+        this.subscribeToEvent(AccountSelectedEvent, this.handleAccountSelected.bind(this))
+    }
+
+    private async handleRemoteNotification(event: RemoteNotificationEvent) {
+        this.logger.trace("PushNotificationModule.handleRemoteNotification", event)
         const notification: INativePushNotification = event.notification
         const content: IBackboneEventContent = notification.content as IBackboneEventContent
 
@@ -62,9 +68,9 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         }
     }
 
-    private async handleTokenRegistrationEvent(event: RemoteNotificationRegistrationEvent) {
+    private async handleTokenRegistration(event: RemoteNotificationRegistrationEvent) {
         try {
-            this.logger.trace("PushNotificationModule.handleTokenRegistrationEvent", event)
+            this.logger.trace("PushNotificationModule.handleTokenRegistration", event)
 
             for (const account of this.runtime.getSessions()) {
                 await this.registerPushTokenForLocalAccount(account.id, event.token)
@@ -74,9 +80,9 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         }
     }
 
-    private async handleAccountSelectedEvent(event: AccountSelectedEvent) {
+    private async handleAccountSelected(event: AccountSelectedEvent) {
         try {
-            this.logger.trace("PushNotificationModule.handleAccountSelectedEvent", event)
+            this.logger.trace("PushNotificationModule.handleAccountSelected", event)
             const tokenResult = this.getNotificationTokenFromConfig()
             if (tokenResult.isSuccess) {
                 await this.registerPushTokenForLocalAccount(event.data.localAccountId, tokenResult.value)
@@ -138,71 +144,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         return Result.ok(pushTokenResult.value)
     }
 
-    private subscriptionIdTokenRegistration: number
-    private subscriptionIdAccountSelection: number
-    private subscriptionIdRemoteNotification: number
-
-    public start(): void {
-        const remoteNotificationResult = this.runtime.nativeEnvironment.eventBus.subscribe(
-            RemoteNotificationEvent,
-            this.handleRemoteNotificationEvent.bind(this)
-        )
-        if (remoteNotificationResult.isError) {
-            throw AppRuntimeErrors.modules.pushNotificationModule
-                .subscriptionNotPossible(remoteNotificationResult.error.message, remoteNotificationResult.error)
-                .logWith(this.logger)
-        }
-        this.subscriptionIdRemoteNotification = remoteNotificationResult.value
-
-        const tokenRegistrationResult = this.runtime.nativeEnvironment.eventBus.subscribe(
-            RemoteNotificationRegistrationEvent,
-            this.handleTokenRegistrationEvent.bind(this)
-        )
-        if (tokenRegistrationResult.isError) {
-            throw AppRuntimeErrors.modules.pushNotificationModule
-                .subscriptionNotPossible(tokenRegistrationResult.error.message, tokenRegistrationResult.error)
-                .logWith(this.logger)
-        }
-        this.subscriptionIdTokenRegistration = tokenRegistrationResult.value
-        this.subscriptionIdAccountSelection = this.runtime.eventBus.subscribe(
-            AccountSelectedEvent,
-            this.handleAccountSelectedEvent.bind(this)
-        )
-    }
-
     public stop(): void {
-        if (!this.subscriptionIdRemoteNotification) {
-            this.logger.warn("No RemoteNotificationEvent subscription available.")
-        } else {
-            const result = this.runtime.nativeEnvironment.eventBus.unsubscribe(
-                RemoteNotificationEvent,
-                this.subscriptionIdRemoteNotification
-            )
-            if (result.isError) {
-                throw AppRuntimeErrors.modules.pushNotificationModule
-                    .unsubscriptionNotPossible(result.error.message, result.error)
-                    .logWith(this.logger)
-            }
-        }
-
-        if (!this.subscriptionIdTokenRegistration) {
-            this.logger.warn("No RemoteNotificationRegistrationEvent subscription available.")
-        } else {
-            const result = this.runtime.nativeEnvironment.eventBus.unsubscribe(
-                RemoteNotificationRegistrationEvent,
-                this.subscriptionIdTokenRegistration
-            )
-            if (result.isError) {
-                throw AppRuntimeErrors.modules.pushNotificationModule
-                    .unsubscriptionNotPossible(result.error.message, result.error)
-                    .logWith(this.logger)
-            }
-        }
-
-        if (!this.subscriptionIdAccountSelection) {
-            this.logger.warn("No AccountSelectedEvent subscription available.")
-        } else {
-            this.runtime.eventBus.unsubscribe(AccountSelectedEvent, this.subscriptionIdAccountSelection)
-        }
+        this.unsubscribeFromAllEvents()
     }
 }

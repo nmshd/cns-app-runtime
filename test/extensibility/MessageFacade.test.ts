@@ -1,3 +1,4 @@
+import { LocalAccountDTO } from "@nmshd/app-runtime"
 import { Realm } from "@nmshd/transport"
 import { expect } from "chai"
 import { AbstractTest } from "../lib"
@@ -9,16 +10,20 @@ export class MessageFacadeTest extends AbstractTest {
         describe("Message", function () {
             this.timeout(60000)
 
+            let localAccount: LocalAccountDTO
+
             before(async function () {
                 await that.createRuntime()
                 await that.runtime.start()
 
-                const localAccount = await that.runtime.accountServices.createAccount(Realm.Prod, "Profil 1")
+                localAccount = await that.runtime.accountServices.createAccount(Realm.Prod, "Profil 1")
                 await that.runtime.selectAccount(localAccount.id, "test")
             })
 
             it("should return messages", async function () {
-                const messages = await that.runtime.transportServices.messages.getMessages({ query: {} })
+                const messages = await that.runtime
+                    .getServices(localAccount.address!)
+                    .transportServices.messages.getMessages({ query: {} })
                 expect(messages.isSuccess).to.be.true
                 expect(messages.value).be.an("Array")
             })

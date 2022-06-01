@@ -36,8 +36,9 @@ export class RelationshipEventingRejectTest extends AbstractTest {
                     sessionA
                 )
                 eventListener.start()
-                await TestUtil.syncUntilHasRelationship(sessionA, requestTo.id)
-                await eventListener.waitFor(OnboardingChangeReceivedEvent)
+                await eventListener.waitFor(OnboardingChangeReceivedEvent, () =>
+                    TestUtil.syncUntilHasRelationship(sessionA, requestTo.id)
+                )
                 eventListener.stop()
                 const events = eventListener.getReceivedEvents()
                 expect(events).to.be.of.length(2)
@@ -86,8 +87,9 @@ export class RelationshipEventingRejectTest extends AbstractTest {
                     sessionB
                 )
                 eventListenerTo.start()
-                await TestUtil.syncUntilHasRelationship(sessionB, relationshipId)
-                await eventListenerTo.waitFor(OnboardingChangeReceivedEvent)
+                await eventListenerTo.waitFor(OnboardingChangeReceivedEvent, () =>
+                    TestUtil.syncUntilHasRelationship(sessionB, relationshipId)
+                )
                 eventListenerTo.stop()
 
                 const events = eventListenerTo.getReceivedEvents()

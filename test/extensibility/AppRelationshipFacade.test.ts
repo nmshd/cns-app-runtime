@@ -21,7 +21,7 @@ export class AppRelationshipFacadeTest extends AbstractTest {
         let relationshipId: string
 
         describe("AppRelationshipFacade", function () {
-            this.timeout(60000)
+            this.timeout(120000)
 
             before(async function () {
                 await that.createRuntime()
