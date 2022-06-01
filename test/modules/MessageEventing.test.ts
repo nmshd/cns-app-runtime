@@ -57,7 +57,7 @@ export class MessageEventingTest extends AbstractTest {
                 expect(mailReceivedEvent.data.date).to.eq(message.createdAt)
                 expect(mailReceivedEvent.data.type).to.eq("MailDVO")
                 expect(mailReceivedEvent.data.createdBy.type).to.eq("IdentityDVO")
-                // expect(mailReceivedEvent.data.createdBy.name).to.eq(createdBy.substring(3, 9))
+                expect(mailReceivedEvent.data.createdBy.name).to.eq(createdBy.substring(3, 9))
             })
 
             after(async function () {

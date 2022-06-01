@@ -55,9 +55,9 @@ export class RelationshipEventingAcceptTest extends AbstractTest {
                 expect(onboardingChangeReceivedEvent.data.change).to.eq(relationshipChangedEvent.data.changes[0])
                 expect(onboardingChangeReceivedEvent.data.identity).to.exist
                 expect(onboardingChangeReceivedEvent.data.identity.id).to.eq(sessionB.address.toString())
-                // expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
-                //     sessionB.address.toString().substring(3, 9)
-                // )
+                expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
+                    sessionB.address.toString().substring(3, 9)
+                )
                 expect(onboardingChangeReceivedEvent.data.identity.hasRelationship).to.eq(true)
                 expect(onboardingChangeReceivedEvent.data.identity.relationship?.id).to.eq(
                     relationshipChangedEvent.data.id
@@ -107,9 +107,9 @@ export class RelationshipEventingAcceptTest extends AbstractTest {
                 expect(onboardingChangeReceivedEvent.data.change.status).to.eq(RelationshipChangeStatus.Accepted)
                 expect(onboardingChangeReceivedEvent.data.change).to.eq(relationshipChangedEvent.data.changes[0])
                 expect(onboardingChangeReceivedEvent.data.identity).to.exist
-                // expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
-                //     sessionA.accountController.identity.address.toString().substring(3, 9)
-                // )
+                expect(onboardingChangeReceivedEvent.data.identity.name).to.eq(
+                    sessionA.accountController.identity.address.toString().substring(3, 9)
+                )
                 expect(onboardingChangeReceivedEvent.data.identity.id).to.eq(
                     sessionA.accountController.identity.address.toString()
                 )
