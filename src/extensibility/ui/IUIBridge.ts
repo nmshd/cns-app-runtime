@@ -5,7 +5,7 @@ import {
     MessageDVO,
     RelationshipChangeDTO,
     RelationshipTemplateDTO,
-    RequestMailDVO,
+    RequestMessageDVO,
     TokenDTO
 } from "@nmshd/runtime"
 import { LocalAccountDTO } from "../../multiAccount"
@@ -15,7 +15,7 @@ export interface IUIBridge {
     showMessage(
         account: LocalAccountDTO,
         relationship: IdentityDVO,
-        message: MessageDVO | MailDVO | RequestMailDVO
+        message: MessageDVO | MailDVO | RequestMessageDVO
     ): Promise<Result<void>>
     showRelationship(account: LocalAccountDTO, relationship: IdentityDVO): Promise<Result<void>>
     showRelationshipChange(
