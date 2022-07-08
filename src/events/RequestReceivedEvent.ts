@@ -1,12 +1,12 @@
-import { DataEvent, MessageDVO, RequestDVO, RequestMailDVO } from "@nmshd/runtime"
+import { DataEvent, LocalRequestDVO, RequestMessageDVO } from "@nmshd/runtime"
 
 export class RequestReceivedEvent extends DataEvent<{
-    request: RequestDVO
-    message: MessageDVO | RequestMailDVO
+    request: LocalRequestDVO
+    message: RequestMessageDVO
 }> {
     public static readonly namespace: string = "app.requestReceived"
 
-    public constructor(address: string, request: RequestDVO, message: MessageDVO | RequestMailDVO) {
+    public constructor(address: string, request: LocalRequestDVO, message: RequestMessageDVO) {
         super(RequestReceivedEvent.namespace, address, {
             request,
             message
