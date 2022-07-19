@@ -1,6 +1,6 @@
-import { SubscriptionTarget } from "@js-soft/ts-utils"
+import { Event, SubscriptionTarget } from "@js-soft/ts-utils"
 import { LocalAccountSession } from "@nmshd/app-runtime"
-import { DataEvent, Event, Runtime } from "@nmshd/runtime"
+import { DataEvent, Runtime } from "@nmshd/runtime"
 
 export class EventWrapper {
     public namespace: string
@@ -63,7 +63,7 @@ export class EventListener {
 
     public stop(): void {
         for (const namespace in this.subscriptions) {
-            this.runtime.eventBus.unsubscribe(namespace, this.subscriptions[namespace])
+            this.runtime.eventBus.unsubscribe(this.subscriptions[namespace])
         }
         this.subscriptions = {}
     }
