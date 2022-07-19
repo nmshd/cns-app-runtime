@@ -37,7 +37,7 @@ export class TestUtil {
             })
         })
         if (!timeout) {
-            return await eventPromise.finally(() => eventBus.unsubscribe(subscriptionTarget, subscriptionId))
+            return await eventPromise.finally(() => eventBus.unsubscribe(subscriptionId))
         }
 
         let timeoutId: NodeJS.Timeout
@@ -56,7 +56,7 @@ export class TestUtil {
         })
 
         return await Promise.race([eventPromise, timeoutPromise]).finally(() => {
-            eventBus.unsubscribe(subscriptionTarget, subscriptionId)
+            eventBus.unsubscribe(subscriptionId)
             clearTimeout(timeoutId)
         })
     }

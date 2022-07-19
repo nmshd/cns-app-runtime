@@ -12,7 +12,7 @@ export interface AppRuntimeModuleConfiguration extends ModuleConfiguration {}
 export abstract class AppRuntimeModule<
     TConfig extends AppRuntimeModuleConfiguration = AppRuntimeModuleConfiguration
 > extends RuntimeModule<TConfig, AppRuntime> {
-    private readonly registeredNativeEventSubscriptions: { id: number; target: Event }[] = []
+    private readonly nativeEventSubscriptionIds: number[] = []
 
     protected subscribeToNativeEvent<TEvent>(event: Event, handler: EventHandler<TEvent>): void {
         const subscriptionResult = this.runtime.nativeEnvironment.eventBus.subscribe(event, handler)
@@ -21,16 +21,13 @@ export abstract class AppRuntimeModule<
             throw subscriptionResult.error
         }
 
-        this.registeredNativeEventSubscriptions.push({ id: subscriptionResult.value, target: event })
+        this.nativeEventSubscriptionIds.push(subscriptionResult.value)
     }
 
     protected override unsubscribeFromAllEvents(): void {
         super.unsubscribeFromAllEvents()
 
-        for (const subscription of this.registeredNativeEventSubscriptions) {
-            this.runtime.nativeEnvironment.eventBus.unsubscribe(subscription.target, subscription.id)
-        }
-
-        this.registeredNativeEventSubscriptions.splice(0)
+        this.nativeEventSubscriptionIds.forEach((id) => this.runtime.nativeEnvironment.eventBus.unsubscribe(id))
+        this.nativeEventSubscriptionIds.splice(0)
     }
 }
