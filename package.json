@@ -37,8 +37,8 @@
     },
     "dependencies": {
         "@js-soft/docdb-access-loki": "^1.0.3",
-        "@js-soft/native-abstractions": "^1.1.0",
-        "@nmshd/runtime": "2.0.0-alpha.36",
+        "@js-soft/native-abstractions": "^1.2.0",
+        "@nmshd/runtime": "2.0.0-alpha.37",
         "lodash": "^4.17.21"
     },
     "devDependencies": {
