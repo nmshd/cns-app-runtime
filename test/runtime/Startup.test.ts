@@ -37,14 +37,6 @@ export class StartupTest extends AbstractTest {
                 expect(events[i++].namespace).to.equal("runtime.initializing")
             })
 
-            it("should fire event when initializing TransportLibrary", function () {
-                expect(events[i++].namespace).to.equal("transport.initializing")
-            })
-
-            it("should fire event after initializing TransportLibrary", function () {
-                expect(events[i++].namespace).to.equal("transport.initialized")
-            })
-
             it("should fire event when loading modules", function () {
                 expect(events[i++].namespace).to.equal("runtime.modulesLoaded")
             })
@@ -55,6 +47,10 @@ export class StartupTest extends AbstractTest {
 
             it("should fire event after initializing runtime", function () {
                 expect(events[i++].namespace).to.equal("runtime.initialized")
+            })
+
+            it("should fire event after starting modules", function () {
+                expect(events[i++].namespace).to.equal("runtime.modulesStarted")
             })
 
             it("should create an account", async function () {

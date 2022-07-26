@@ -30,12 +30,8 @@ export interface AppRuntimeServices extends RuntimeServices {
 }
 
 export class AppRuntime extends Runtime<AppConfig> {
-    public constructor(public readonly nativeBootstrapper: INativeBootstrapper, appConfig: AppConfig) {
-        super(appConfig)
-        if (!nativeBootstrapper.isInitialized) {
-            throw AppRuntimeErrors.startup.bootstrapperNotInitialized()
-        }
-        this._nativeEnvironment = nativeBootstrapper.nativeEnvironment
+    public constructor(private readonly _nativeEnvironment: INativeEnvironment, appConfig: AppConfig) {
+        super(appConfig, _nativeEnvironment.loggerFactory)
     }
 
     private _uiBridge: IUIBridge | undefined
@@ -84,7 +80,6 @@ export class AppRuntime extends Runtime<AppConfig> {
         return this._accountServices
     }
 
-    private readonly _nativeEnvironment: INativeEnvironment
     public get nativeEnvironment(): INativeEnvironment {
         return this._nativeEnvironment
     }
@@ -323,7 +318,7 @@ export class AppRuntime extends Runtime<AppConfig> {
                   transportLibrary: transportConfig
               })
 
-        const runtime = new AppRuntime(nativeBootstrapper, mergedConfig)
+        const runtime = new AppRuntime(nativeBootstrapper.nativeEnvironment, mergedConfig)
         await runtime.init()
         runtime.logger.trace("Runtime initialized")
 
@@ -341,9 +336,7 @@ export class AppRuntime extends Runtime<AppConfig> {
     }
 
     protected createLoggerFactory(): ILoggerFactory {
-        const loggerFactory: ILoggerFactory = this.nativeEnvironment.loggerFactory
-        this.logger = loggerFactory.getLogger(Runtime)
-        return loggerFactory
+        return this.nativeEnvironment.loggerFactory
     }
 
     protected createDatabaseConnection(): Promise<IDatabaseConnection> {
