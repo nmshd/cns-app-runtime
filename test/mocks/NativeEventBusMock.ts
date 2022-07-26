@@ -11,7 +11,9 @@ export class NativeEventBusMock implements INativeEventBus {
     }
 
     public init(): Promise<Result<void>> {
-        this.eventBus = new EventEmitter2EventBus()
+        this.eventBus = new EventEmitter2EventBus(() => {
+            return
+        })
         return Promise.resolve(Result.ok(undefined))
     }
 

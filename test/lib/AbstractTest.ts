@@ -17,6 +17,6 @@ export abstract class AbstractTest {
     protected async createRuntimeWithoutInit(): Promise<void> {
         const nativeBootstrapperMock = new NativeBootstrapperMock()
         await nativeBootstrapperMock.init()
-        this.runtime = new AppRuntime(nativeBootstrapperMock, this.config)
+        this.runtime = new AppRuntime(nativeBootstrapperMock.nativeEnvironment, this.config)
     }
 }

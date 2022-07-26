@@ -54,7 +54,7 @@ export class EventListener {
         this.receivedEvents = []
         this.listeningTo.forEach((event) => {
             const namespace = typeof event === "function" ? event.name : event
-            const subscriptionId = this.runtime.eventBus.subscribe(event, (e) => {
+            const subscriptionId = this.runtime.eventBus.subscribe(event, (e: any) => {
                 this.eventHandler(namespace, e)
             })
             this.subscriptions[namespace] = subscriptionId
