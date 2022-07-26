@@ -341,9 +341,7 @@ export class AppRuntime extends Runtime<AppConfig> {
     }
 
     protected createLoggerFactory(): ILoggerFactory {
-        const loggerFactory: ILoggerFactory = this.nativeEnvironment.loggerFactory
-        this.logger = loggerFactory.getLogger(Runtime)
-        return loggerFactory
+        return this.nativeEnvironment.loggerFactory
     }
 
     protected createDatabaseConnection(): Promise<IDatabaseConnection> {
