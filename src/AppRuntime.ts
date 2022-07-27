@@ -180,7 +180,9 @@ export class AppRuntime extends Runtime<AppConfig> {
                 throw AppRuntimeErrors.multiAccount.concurrentLoginOfDifferentAccounts()
             } else {
                 // Another account is currently logging in and we already have an open session -> await login of the other account but do not return
-                await this._selectAccountPromise
+                await this._selectAccountPromise?.catch(() => {
+                    // ignore errors as they are caught by the caller of the promise
+                })
             }
         } else if (this._selectAccountPromise) {
             // Same account is currently logging in -> await login and return
