@@ -181,7 +181,7 @@ export class AppRuntime extends Runtime<AppConfig> {
             } else {
                 // Another account is currently logging in and we already have an open session -> await login of the other account but do not return
                 await this._selectAccountPromise?.catch(() => {
-                    // ignore errors as they are catched by the caller of the promise
+                    // ignore errors as they are caught by the caller of the promise
                 })
             }
         } else if (this._selectAccountPromise) {
