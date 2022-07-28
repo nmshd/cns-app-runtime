@@ -19,10 +19,9 @@ export class RelationshipEventingRevokeTest extends AbstractTest {
                 await that.runtime.start()
 
                 const accounts = await TestUtil.provideAccounts(that.runtime, 2)
-                await that.runtime.selectAccount(accounts[0].id, "")
-                sessionA = that.runtime.findSession(accounts[0].id)!
+                sessionA = await that.runtime.selectAccount(accounts[0].id, "")
                 await that.runtime.selectAccount(accounts[1].id, "")
-                sessionB = that.runtime.findSession(accounts[1].id)!
+                sessionB = await that.runtime.getOrCreateSession(accounts[1].id)
             })
 
             it("should fire events when relationship request is received", async function () {

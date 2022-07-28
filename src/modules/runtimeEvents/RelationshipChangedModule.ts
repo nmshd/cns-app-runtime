@@ -18,30 +18,26 @@ export class RelationshipChangedModule extends AppRuntimeModule<RelationshipChan
 
     private async handleRelationshipChanged(event: RelationshipChangedEvent) {
         const relationship = event.data
-        const session = this.runtime.findSessionByAddress(event.eventTargetAddress)
-        if (!session) {
-            this.logger.error(`No session found for address ${event.eventTargetAddress}`)
-            return
-        }
+        const session = await this.runtime.getOrCreateSession(event.eventTargetAddress)
 
-        // The very first change is the onboarding change
-        if (relationship.changes.length === 1) {
-            const change = relationship.changes[0]
-            // Only fire received events if the current session did not create it
-            if (
-                (!change.response && change.request.createdBy !== session.address) ||
-                (change.response && change.response.createdBy !== session.address)
-            ) {
-                const relationshipDVO = await session.expander.expandRelationshipDTO(relationship)
-                this.runtime.eventBus.publish(
-                    new OnboardingChangeReceivedEvent(
-                        session.address,
-                        relationship.changes[0],
-                        relationship,
-                        relationshipDVO
-                    )
+        // Only listen for the onboarding change (the first one)
+        if (relationship.changes.length !== 1) return
+
+        const change = relationship.changes[0]
+        // Only fire received events if the session did not create it
+        if (
+            (!change.response && change.request.createdBy !== session.address) ||
+            change.response?.createdBy !== session.address
+        ) {
+            const relationshipDVO = await session.expander.expandRelationshipDTO(relationship)
+            this.runtime.eventBus.publish(
+                new OnboardingChangeReceivedEvent(
+                    session.address,
+                    relationship.changes[0],
+                    relationship,
+                    relationshipDVO
                 )
-            }
+            )
         }
     }
 

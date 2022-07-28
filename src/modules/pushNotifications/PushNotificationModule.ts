@@ -28,24 +28,19 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         const content: IBackboneEventContent = notification.content as IBackboneEventContent
 
         try {
-            const account = await this.runtime.selectAccountByAddress(content.accRef, "")
-            const session = this.runtime.findSession(account.id.toString())
-            if (!session) {
-                this.logger.error(`No session found for account ref ${content.accRef}`)
-                return
-            }
+            const services = await this.runtime.getServices(content.accRef)
 
             switch (content.eventName) {
                 case BackboneEventName.DatawalletModificationsCreated:
-                    const walletResult = await session.transportServices.account.syncDatawallet()
+                    const walletResult = await services.transportServices.account.syncDatawallet()
                     if (walletResult.isError) {
                         this.logger.error(walletResult)
                         return
                     }
-                    this.runtime.eventBus.publish(new DatawalletSynchronizedEvent(session.address))
+                    this.runtime.eventBus.publish(new DatawalletSynchronizedEvent(content.accRef))
                     break
                 case BackboneEventName.ExternalEventCreated:
-                    const syncResult = await session.transportServices.account.syncEverything()
+                    const syncResult = await services.transportServices.account.syncEverything()
                     if (syncResult.isError) {
                         this.logger.error(syncResult)
                         return
@@ -53,7 +48,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
 
                     this.runtime.eventBus.publish(
                         new ExternalEventReceivedEvent(
-                            session.address,
+                            content.accRef,
                             syncResult.value.messages,
                             syncResult.value.relationships
                         )
@@ -72,8 +67,8 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         try {
             this.logger.trace("PushNotificationModule.handleTokenRegistration", event)
 
-            for (const account of this.runtime.getSessions()) {
-                await this.registerPushTokenForLocalAccount(account.id, event.token)
+            for (const session of this.runtime.getSessions()) {
+                await this.registerPushTokenForLocalAccount(session.account.address!, event.token)
             }
         } catch (e) {
             this.logger.error(e)
@@ -81,20 +76,17 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
     }
 
     private async handleAccountSelected(event: AccountSelectedEvent) {
-        try {
-            this.logger.trace("PushNotificationModule.handleAccountSelected", event)
-            const tokenResult = this.getNotificationTokenFromConfig()
-            if (tokenResult.isSuccess) {
-                await this.registerPushTokenForLocalAccount(event.data.localAccountId, tokenResult.value)
-            } else {
-                this.logger.error(tokenResult.error)
-            }
-        } catch (e) {
-            this.logger.error(e)
+        this.logger.trace("PushNotificationModule.handleAccountSelected", event)
+        const tokenResult = this.getNotificationTokenFromConfig()
+        if (tokenResult.isError) {
+            this.logger.error(tokenResult.error)
+            return
         }
+
+        await this.registerPushTokenForLocalAccount(event.data.address, tokenResult.value)
     }
 
-    public async registerPushTokenForLocalAccount(id: string, token: string): Promise<void> {
+    public async registerPushTokenForLocalAccount(address: string, token: string): Promise<void> {
         if (!token) {
             throw AppRuntimeErrors.modules.pushNotificationModule
                 .tokenRegistrationNotPossible(
@@ -103,13 +95,9 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
                 .logWith(this.logger)
         }
 
-        const session = this.runtime.findSession(id)
-        if (!session) {
-            throw AppRuntimeErrors.modules.pushNotificationModule
-                .tokenRegistrationNotPossible("No session for this account found")
-                .logWith(this.logger)
-        }
-        const deviceResult = await session.transportServices.account.getDeviceInfo()
+        const services = await this.runtime.getServices(address)
+
+        const deviceResult = await services.transportServices.account.getDeviceInfo()
         if (deviceResult.isError) {
             throw AppRuntimeErrors.modules.pushNotificationModule
                 .tokenRegistrationNotPossible("No device for this account found", deviceResult.error)
@@ -120,7 +108,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
         const handle = token
         const installationId = device.id
 
-        const result = await session.transportServices.account.registerPushNotificationToken({
+        const result = await services.transportServices.account.registerPushNotificationToken({
             platform,
             handle,
             installationId
@@ -131,7 +119,7 @@ export class PushNotificationModule extends AppRuntimeModule<PushNotificationMod
                 .logWith(this.logger)
         } else {
             this.logger.trace(
-                `PushNotificationModule.registerPushTokenForLocalAccount: Token ${handle} registered for account ${id} on platform ${platform} and installationId ${installationId}`
+                `PushNotificationModule.registerPushTokenForLocalAccount: Token ${handle} registered for account ${address} on platform ${platform} and installationId ${installationId}`
             )
         }
     }

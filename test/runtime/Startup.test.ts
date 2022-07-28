@@ -62,7 +62,7 @@ export class StartupTest extends AbstractTest {
             it("should login to created account", async function () {
                 const selectedAccount = await that.runtime.selectAccount(localAccount.id, "test")
                 expect(selectedAccount).to.exist
-                expect(selectedAccount.id.toString()).to.equal(localAccount.id.toString())
+                expect(selectedAccount.account.id.toString()).to.equal(localAccount.id.toString())
             })
 
             after(async function () {

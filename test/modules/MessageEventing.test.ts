@@ -18,10 +18,8 @@ export class MessageEventingTest extends AbstractTest {
                 await that.runtime.start()
 
                 const accounts = await TestUtil.provideAccounts(that.runtime, 2)
-                await that.runtime.selectAccount(accounts[0].id, "")
-                sessionA = that.runtime.findSession(accounts[0].id)!
-                await that.runtime.selectAccount(accounts[1].id, "")
-                sessionB = that.runtime.findSession(accounts[1].id)!
+                sessionA = await that.runtime.selectAccount(accounts[0].id, "")
+                sessionB = await that.runtime.selectAccount(accounts[1].id, "")
 
                 await TestUtil.addRelationship(sessionA, sessionB)
             })

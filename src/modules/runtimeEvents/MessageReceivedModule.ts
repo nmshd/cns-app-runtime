@@ -1,6 +1,6 @@
 import { MailDVO, MessageReceivedEvent } from "@nmshd/runtime"
 import { AppRuntimeError } from "../../AppRuntimeError"
-import { MailReceivedEvent, RequestReceivedEvent } from "../../events"
+import { MailReceivedEvent } from "../../events"
 import { AppRuntimeModule, AppRuntimeModuleConfiguration } from "../AppRuntimeModule"
 
 export interface MessageReceivedModuleConfig extends AppRuntimeModuleConfiguration {}
@@ -17,20 +17,10 @@ export class MessageReceivedModule extends AppRuntimeModule<MessageReceivedModul
     }
 
     private async handleMessageReceived(event: MessageReceivedEvent) {
-        const message = event.data
-        const session = this.runtime.findSessionByAddress(event.eventTargetAddress)
-        if (!session) {
-            this.logger.error(`No session found for address ${event.eventTargetAddress}`)
-            return
-        }
-        const messageDVO = await session.expander.expandMessageDTO(message)
+        const services = await this.runtime.getServices(event.eventTargetAddress)
+        const messageDVO = await services.dataViewExpander.expandMessageDTO(event.data)
 
         switch (messageDVO.type) {
-            case "RequestMessageDVO":
-                this.runtime.eventBus.publish(
-                    new RequestReceivedEvent(event.eventTargetAddress, messageDVO.request, messageDVO)
-                )
-                break
             case "MailDVO":
                 const mail: MailDVO = messageDVO
                 this.runtime.eventBus.publish(new MailReceivedEvent(event.eventTargetAddress, mail))

@@ -1,6 +1,6 @@
 {
     "name": "@nmshd/app-runtime",
-    "version": "2.0.0-beta.3",
+    "version": "2.0.0-beta.4",
     "description": "The App Runtime",
     "homepage": "https://enmeshed.eu",
     "repository": "github:nmshd/cns-app-runtime",
@@ -31,14 +31,13 @@
         "lint:tsc": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
         "test": "npm run test:node && npm run test:web",
         "test:node": "mocha -r ts-node/register -r tsconfig-paths/register ./test/index.ts --project ./test/tsconfig.json --exit",
-        "test:single": "mocha -r ts-node/register -r tsconfig-paths/register ./test/index.single.ts --project ./test/tsconfig.json --exit",
         "test:web": "browsertest-runner",
         "test:web:debug": "browsertest-runner-debug"
     },
     "dependencies": {
         "@js-soft/docdb-access-loki": "^1.0.3",
         "@js-soft/native-abstractions": "^1.2.0",
-        "@nmshd/runtime": "2.0.0-beta.10",
+        "@nmshd/runtime": "2.0.0-beta.12",
         "lodash": "^4.17.21"
     },
     "devDependencies": {
@@ -50,7 +49,7 @@
         "@types/lokijs": "^1.5.7",
         "@types/luxon": "^3.0.0",
         "@types/mocha": "^9.1.1",
-        "@types/node": "^18.6.1",
+        "@types/node": "^18.6.2",
         "bt-runner": "^2.0.5",
         "chai": "^4.3.6",
         "copy-webpack-plugin": "^11.0.0",

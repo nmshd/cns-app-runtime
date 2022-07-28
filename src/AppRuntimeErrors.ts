@@ -104,13 +104,6 @@ class MultiAccount {
     public wrongRealm(): UserfriendlyApplicationError {
         return new UserfriendlyApplicationError("error.runtime.MultiAccount.WrongRealm", "The given realm is invalid.")
     }
-
-    public concurrentLoginOfDifferentAccounts(): UserfriendlyApplicationError {
-        return new UserfriendlyApplicationError(
-            "error.runtime.MultiAccount.ParallelLoginOfDifferentAccounts",
-            "You cannot login different accounts concurrently. Please wait until the login is completed."
-        )
-    }
 }
 
 class Modules {

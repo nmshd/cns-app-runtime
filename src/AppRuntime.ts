@@ -1,6 +1,5 @@
 import { IDatabaseConnection } from "@js-soft/docdb-access-abstractions"
 import { LokiJsConnection } from "@js-soft/docdb-access-loki"
-import { ILoggerFactory } from "@js-soft/logging-abstractions"
 import { INativeBootstrapper, INativeEnvironment, INativeTranslationProvider } from "@js-soft/native-abstractions"
 import { Result } from "@js-soft/ts-utils"
 import { ConsumptionController } from "@nmshd/consumption"
@@ -8,7 +7,7 @@ import { ModuleConfiguration, Runtime, RuntimeHealth, RuntimeServices } from "@n
 import { AccountController, CoreId, ICoreAddress } from "@nmshd/transport"
 import { AppConfig, AppConfigOverwrite, createAppConfig } from "./AppConfig"
 import { AppRuntimeErrors } from "./AppRuntimeErrors"
-import { AccountSelectedEvent, RelationshipSelectedEvent } from "./events"
+import { RelationshipSelectedEvent } from "./events"
 import { AppServices, IUIBridge } from "./extensibility"
 import {
     AppLaunchModule,
@@ -21,8 +20,14 @@ import {
     PushNotificationModule,
     RelationshipChangedModule
 } from "./modules"
-import { AccountServices, LocalAccountDTO, LocalAccountMapper, MultiAccountController } from "./multiAccount"
-import { LocalAccountSession } from "./multiAccount/data/LocalAccountSession"
+import {
+    AccountServices,
+    LocalAccountDTO,
+    LocalAccountMapper,
+    LocalAccountSession,
+    MultiAccountController
+} from "./multiAccount"
+import { SessionStorage } from "./SessionStorage"
 import { UserfriendlyResult } from "./UserfriendlyResult"
 
 export interface AppRuntimeServices extends RuntimeServices {
@@ -44,18 +49,16 @@ export class AppRuntime extends Runtime<AppConfig> {
         this._uiBridgePromise = new Promise((resolve) => {
             this._uiBridgeResolveFunction = resolve
         })
-        this._uiBridgePromise
-            .then(() => {
-                this._uiBridgePromise = undefined
-                this._uiBridgeResolveFunction = undefined
-            })
-            .catch((e) => {
-                this._uiBridgePromise = undefined
-                this._uiBridgeResolveFunction = undefined
-                this.logger.error(e)
-            })
 
         return this._uiBridgePromise
+            .catch((e) => {
+                this.logger.error(e)
+                throw e
+            })
+            .finally(() => {
+                this._uiBridgePromise = undefined
+                this._uiBridgeResolveFunction = undefined
+            })
     }
 
     public registerUIBridge(uiBridge: IUIBridge): UserfriendlyResult<void> {
@@ -84,11 +87,18 @@ export class AppRuntime extends Runtime<AppConfig> {
         return this._nativeEnvironment
     }
 
+    private readonly sessionStorage = new SessionStorage()
+
     public get currentAccount(): LocalAccountDTO {
-        if (!this._currentSession) {
-            throw AppRuntimeErrors.general.currentSessionUnavailable()
-        }
-        return this._currentSession.account
+        return this.sessionStorage.currentSession.account
+    }
+
+    public get currentSession(): LocalAccountSession {
+        return this.sessionStorage.currentSession
+    }
+
+    public getSessions(): LocalAccountSession[] {
+        return this.sessionStorage.getSessions()
     }
 
     protected async login(
@@ -107,21 +117,9 @@ export class AppRuntime extends Runtime<AppConfig> {
         return { ...services, appServices }
     }
 
-    private _currentSession?: LocalAccountSession
-    public get currentSession(): LocalAccountSession {
-        if (!this._currentSession) {
-            throw AppRuntimeErrors.general.currentSessionUnavailable()
-        }
-        return this._currentSession
-    }
-
-    public getServices(address: string | ICoreAddress): AppRuntimeServices {
+    public async getServices(address: string | ICoreAddress): Promise<AppRuntimeServices> {
         const addressString = typeof address === "string" ? address : address.toString()
-
-        const session = this._availableSessions.find((session) => session.address === addressString)
-        if (!session) {
-            throw new Error(`Account ${addressString} not logged in.`)
-        }
+        const session = await this.getOrCreateSession(addressString)
 
         return {
             transportServices: session.transportServices,
@@ -131,86 +129,53 @@ export class AppRuntime extends Runtime<AppConfig> {
         }
     }
 
-    private readonly _availableSessions: LocalAccountSession[] = []
-
-    public getSessions(): LocalAccountDTO[] {
-        return this._availableSessions.map((session) => session.account)
+    public async selectAccount(accountAddress: string, _password: string): Promise<LocalAccountSession> {
+        const session = await this.getOrCreateSession(accountAddress)
+        this.sessionStorage.currentSession = session
+        return session
     }
 
-    private _accountIdToPromise?: string
-    private _selectAccountPromise?: Promise<LocalAccountDTO>
+    public async getOrCreateSession(accountReference: string): Promise<LocalAccountSession> {
+        const existingSession = this.sessionStorage.findSession(accountReference)
+        if (existingSession) {
+            return existingSession
+        }
 
-    public getSession(accountId: string): LocalAccountDTO | undefined {
-        const session = this.findSession(accountId)
-        if (session) return session.account
-        return undefined
+        return await this.createSession(accountReference)
     }
 
-    public findSession(accountId: string): LocalAccountSession | undefined {
-        return this._availableSessions.find((item) => item.account.id === accountId)
-    }
+    private currentSessionPromise: { promise: Promise<LocalAccountSession>; accountId: string } | undefined
+    private async createSession(accountReference: string, masterPassword = ""): Promise<LocalAccountSession> {
+        const accountId =
+            accountReference.length === 20
+                ? accountReference
+                : (await this.multiAccountController.getAccountByAddress(accountReference)).id.toString()
 
-    public findSessionByAddress(address: string): LocalAccountSession | undefined {
-        return this._availableSessions.find((item) => item.address === address)
-    }
-
-    public async selectAccountByAddress(address: string, password: string): Promise<LocalAccountDTO> {
-        if (this._currentSession && this._currentSession.address === address) {
-            return this._currentSession.account
-        }
-        const availableSession = this.findSessionByAddress(address)
-
-        let accountId = availableSession?.account.id
-        if (!accountId) {
-            accountId = (await this.multiAccountController.getAccountByAddress(address)).id.toString()
-        }
-        return await this.selectAccount(accountId, password)
-    }
-
-    public async selectAccount(accountId: string, password: string): Promise<LocalAccountDTO> {
-        if (this._currentSession && this._currentSession.account.id === accountId) {
-            return this._currentSession.account
-        }
-        const availableSession = this.findSession(accountId)
-
-        // If there is any select promise, we have to await it, even before returning an available session
-        if (this._accountIdToPromise && this._accountIdToPromise !== accountId) {
-            if (!availableSession) {
-                // Another account is currently logging in and we also need to log in -> error
-                throw AppRuntimeErrors.multiAccount.concurrentLoginOfDifferentAccounts()
-            } else {
-                // Another account is currently logging in and we already have an open session -> await login of the other account but do not return
-                await this._selectAccountPromise?.catch(() => {
-                    // ignore errors as they are caught by the caller of the promise
-                })
-            }
-        } else if (this._selectAccountPromise) {
-            // Same account is currently logging in -> await login and return
-            return await this._selectAccountPromise
+        if (this.currentSessionPromise?.accountId === accountId) {
+            return await this.currentSessionPromise.promise
         }
 
-        if (availableSession) {
-            await this.login(availableSession.accountController, availableSession.consumptionController)
-            this._currentSession = availableSession
-            this.eventBus.publish(new AccountSelectedEvent(availableSession.address, availableSession.account.id))
-            return availableSession.account
+        if (this.currentSessionPromise) {
+            await this.currentSessionPromise.promise.catch(() => {
+                // ignore
+            })
+
+            return await this.createSession(accountReference, masterPassword)
         }
 
-        this._selectAccountPromise = this._selectAccount(accountId, password)
+        this.currentSessionPromise = { promise: this._createSession(accountReference, masterPassword), accountId }
 
         try {
-            return await this._selectAccountPromise
+            return await this.currentSessionPromise.promise
         } finally {
-            this._selectAccountPromise = undefined
-            this._accountIdToPromise = undefined
+            this.currentSessionPromise = undefined
         }
     }
 
-    private async _selectAccount(accountId: string, password: string): Promise<LocalAccountDTO> {
-        this._accountIdToPromise = accountId
+    private async _createSession(accountId: string, masterPassword: string) {
         const [localAccount, accountController] = await this._multiAccountController.selectAccount(
             CoreId.from(accountId),
-            password
+            masterPassword
         )
         if (!localAccount.address) {
             throw AppRuntimeErrors.general.addressUnavailable().logWith(this.logger)
@@ -220,7 +185,7 @@ export class AppRuntime extends Runtime<AppConfig> {
         const services = await this.login(accountController, consumptionController)
 
         this.logger.debug(`Finished login to ${accountId}.`)
-        const session = {
+        const session: LocalAccountSession = {
             address: localAccount.address.toString(),
             account: LocalAccountMapper.toLocalAccountDTO(localAccount),
             consumptionServices: services.consumptionServices,
@@ -230,12 +195,10 @@ export class AppRuntime extends Runtime<AppConfig> {
             accountController,
             consumptionController
         }
-        this._availableSessions.push(session)
-        this._currentSession = session
 
-        this.eventBus.publish(new AccountSelectedEvent(session.address, session.account.id))
+        this.sessionStorage.addSession(session)
 
-        return session.account
+        return session
     }
 
     public async queryAccount(
@@ -262,23 +225,17 @@ export class AppRuntime extends Runtime<AppConfig> {
     }
 
     public async selectRelationship(id?: string): Promise<void> {
-        if (!this._currentSession) {
-            throw AppRuntimeErrors.general.currentSessionUnavailable().logWith(this.logger)
-        }
-
         if (!id) {
-            this._currentSession.selectedRelationship = undefined
+            this.currentSession.selectedRelationship = undefined
             return
         }
 
         const result = await this.currentSession.appServices.relationships.renderRelationship(id)
-        if (result.isError) {
-            throw result.error
-        }
+        if (result.isError) throw result.error
 
         const relationship = result.value
-        this._currentSession.selectedRelationship = relationship
-        this.eventBus.publish(new RelationshipSelectedEvent(this._currentSession.address, relationship))
+        this.currentSession.selectedRelationship = relationship
+        this.eventBus.publish(new RelationshipSelectedEvent(this.currentSession.address, relationship))
     }
 
     public getHealth(): Promise<RuntimeHealth> {
@@ -335,10 +292,6 @@ export class AppRuntime extends Runtime<AppConfig> {
         await runtime.start()
         runtime.logger.trace("Runtime started")
         return runtime
-    }
-
-    protected createLoggerFactory(): ILoggerFactory {
-        return this.nativeEnvironment.loggerFactory
     }
 
     protected createDatabaseConnection(): Promise<IDatabaseConnection> {
@@ -400,6 +353,7 @@ export class AppRuntime extends Runtime<AppConfig> {
     private translationProvider: INativeTranslationProvider = {
         translate: (key: string) => Promise.resolve(Result.ok(key))
     }
+
     public registerTranslationProvider(provider: INativeTranslationProvider): void {
         this.translationProvider = provider
     }
