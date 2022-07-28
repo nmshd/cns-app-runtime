@@ -21,11 +21,8 @@ export class OnboardingChangeReceivedModule extends AppRuntimeModule<OnboardingC
         const identity = event.data.identity
         let title = ""
         let text = ""
-        const session = this.runtime.findSessionByAddress(event.eventTargetAddress)
-        if (!session) {
-            this.logger.error(`No session found for address ${event.eventTargetAddress}`)
-            return
-        }
+        const session = await this.runtime.getOrCreateSession(event.eventTargetAddress)
+
         switch (change.status) {
             case RelationshipChangeStatus.Accepted:
                 title = "Kontaktanfrage genehmigt"

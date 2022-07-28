@@ -21,9 +21,8 @@ export class MessageFacadeTest extends AbstractTest {
             })
 
             it("should return messages", async function () {
-                const messages = await that.runtime
-                    .getServices(localAccount.address!)
-                    .transportServices.messages.getMessages({ query: {} })
+                const services = await that.runtime.getServices(localAccount.address!)
+                const messages = await services.transportServices.messages.getMessages({ query: {} })
                 expect(messages.isSuccess).to.be.true
                 expect(messages.value).be.an("Array")
             })

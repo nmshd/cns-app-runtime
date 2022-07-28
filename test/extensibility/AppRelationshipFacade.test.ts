@@ -7,8 +7,7 @@ import { AbstractTest, TestUtil } from "../lib"
 export class AppRelationshipFacadeTest extends AbstractTest {
     private async createSession() {
         const localAccount1 = await this.runtime.accountServices.createAccount(Realm.Prod, "Profil 1")
-        await this.runtime.selectAccount(localAccount1.id, "test")
-        return (this.runtime as any)._currentSession as LocalAccountSession
+        return await this.runtime.selectAccount(localAccount1.id, "test")
     }
 
     public run(): void {

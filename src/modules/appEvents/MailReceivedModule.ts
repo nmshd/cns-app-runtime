@@ -16,12 +16,9 @@ export class MailReceivedModule extends AppRuntimeModule<MailReceivedModuleConfi
     }
 
     private async handleMailReceived(event: MailReceivedEvent) {
+        const session = await this.runtime.getOrCreateSession(event.eventTargetAddress)
+
         const mail = event.data
-        const session = this.runtime.findSessionByAddress(event.eventTargetAddress)
-        if (!session) {
-            this.logger.error(`No session found for address ${event.eventTargetAddress}`)
-            return
-        }
         const sender = mail.createdBy
 
         await this.runtime.nativeEnvironment.notificationAccess.schedule(mail.name, mail.createdBy.name, {
