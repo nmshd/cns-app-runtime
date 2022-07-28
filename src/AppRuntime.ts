@@ -173,9 +173,10 @@ export class AppRuntime extends Runtime<AppConfig> {
     }
 
     private async _createSession(accountReference: string, masterPassword: string) {
-        const accountId = accountReference.startsWith("id1")
-            ? (await this.multiAccountController.getAccountByAddress(accountReference)).id
-            : CoreId.from(accountReference)
+        const accountId =
+            accountReference.length === 20
+                ? CoreId.from(accountReference)
+                : (await this.multiAccountController.getAccountByAddress(accountReference)).id
 
         const [localAccount, accountController] = await this._multiAccountController.selectAccount(
             accountId,
