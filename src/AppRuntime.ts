@@ -39,8 +39,6 @@ export class AppRuntime extends Runtime<AppConfig> {
         super(appConfig, _nativeEnvironment.loggerFactory)
     }
 
-    private readonly sessionStorage = new SessionStorage()
-
     private _uiBridge: IUIBridge | undefined
     private _uiBridgePromise: Promise<IUIBridge> | undefined
     private _uiBridgeResolveFunction: Function | undefined
@@ -88,6 +86,8 @@ export class AppRuntime extends Runtime<AppConfig> {
     public get nativeEnvironment(): INativeEnvironment {
         return this._nativeEnvironment
     }
+
+    private readonly sessionStorage = new SessionStorage()
 
     public get currentAccount(): LocalAccountDTO {
         return this.sessionStorage.currentSession.account
@@ -141,14 +141,17 @@ export class AppRuntime extends Runtime<AppConfig> {
             return existingSession
         }
 
-        const newSession = await this.createSession(accountReference)
-        this.sessionStorage.addSession(newSession)
-        return newSession
+        return await this.createSession(accountReference)
     }
 
-    private currentSessionPromise: { promise: Promise<LocalAccountSession>; reference: string } | undefined
+    private currentSessionPromise: { promise: Promise<LocalAccountSession>; accountId: string } | undefined
     private async createSession(accountReference: string, masterPassword = ""): Promise<LocalAccountSession> {
-        if (this.currentSessionPromise?.reference === accountReference) {
+        const accountId =
+            accountReference.length === 20
+                ? accountReference
+                : (await this.multiAccountController.getAccountByAddress(accountReference)).id.toString()
+
+        if (this.currentSessionPromise?.accountId === accountId) {
             return await this.currentSessionPromise.promise
         }
 
@@ -160,10 +163,7 @@ export class AppRuntime extends Runtime<AppConfig> {
             return await this.createSession(accountReference, masterPassword)
         }
 
-        this.currentSessionPromise = {
-            promise: this._createSession(accountReference, masterPassword),
-            reference: accountReference
-        }
+        this.currentSessionPromise = { promise: this._createSession(accountReference, masterPassword), accountId }
 
         try {
             return await this.currentSessionPromise.promise
@@ -172,14 +172,9 @@ export class AppRuntime extends Runtime<AppConfig> {
         }
     }
 
-    private async _createSession(accountReference: string, masterPassword: string) {
-        const accountId =
-            accountReference.length === 20
-                ? CoreId.from(accountReference)
-                : (await this.multiAccountController.getAccountByAddress(accountReference)).id
-
+    private async _createSession(accountId: string, masterPassword: string) {
         const [localAccount, accountController] = await this._multiAccountController.selectAccount(
-            accountId,
+            CoreId.from(accountId),
             masterPassword
         )
         if (!localAccount.address) {
@@ -189,7 +184,7 @@ export class AppRuntime extends Runtime<AppConfig> {
 
         const services = await this.login(accountController, consumptionController)
 
-        this.logger.debug(`Finished login to ${accountReference}.`)
+        this.logger.debug(`Finished login to ${accountId}.`)
         const session: LocalAccountSession = {
             address: localAccount.address.toString(),
             account: LocalAccountMapper.toLocalAccountDTO(localAccount),
@@ -200,6 +195,8 @@ export class AppRuntime extends Runtime<AppConfig> {
             accountController,
             consumptionController
         }
+
+        this.sessionStorage.addSession(session)
 
         return session
     }
