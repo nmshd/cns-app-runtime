@@ -26,11 +26,6 @@ export class MessageReceivedModule extends AppRuntimeModule<MessageReceivedModul
         const messageDVO = await session.expander.expandMessageDTO(message)
 
         switch (messageDVO.type) {
-            case "RequestMessageDVO":
-                this.runtime.eventBus.publish(
-                    new RequestReceivedEvent(event.eventTargetAddress, messageDVO.request, messageDVO)
-                )
-                break
             case "MailDVO":
                 const mail: MailDVO = messageDVO
                 this.runtime.eventBus.publish(new MailReceivedEvent(event.eventTargetAddress, mail))
