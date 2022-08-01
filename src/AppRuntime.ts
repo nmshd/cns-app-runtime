@@ -7,7 +7,7 @@ import { ModuleConfiguration, Runtime, RuntimeHealth, RuntimeServices } from "@n
 import { AccountController, CoreId, ICoreAddress } from "@nmshd/transport"
 import { AppConfig, AppConfigOverwrite, createAppConfig } from "./AppConfig"
 import { AppRuntimeErrors } from "./AppRuntimeErrors"
-import { RelationshipSelectedEvent } from "./events"
+import { AccountSelectedEvent, RelationshipSelectedEvent } from "./events"
 import { AppServices, IUIBridge } from "./extensibility"
 import {
     AppLaunchModule,
@@ -132,6 +132,7 @@ export class AppRuntime extends Runtime<AppConfig> {
     public async selectAccount(accountAddress: string, _password: string): Promise<LocalAccountSession> {
         const session = await this.getOrCreateSession(accountAddress)
         this.sessionStorage.currentSession = session
+        this.eventBus.publish(new AccountSelectedEvent(session.address, session.account.id))
         return session
     }
 
