@@ -7,7 +7,7 @@ import { ModuleConfiguration, Runtime, RuntimeHealth, RuntimeServices } from "@n
 import { AccountController, CoreId, ICoreAddress } from "@nmshd/transport"
 import { AppConfig, AppConfigOverwrite, createAppConfig } from "./AppConfig"
 import { AppRuntimeErrors } from "./AppRuntimeErrors"
-import { RelationshipSelectedEvent } from "./events"
+import { AccountSelectedEvent, RelationshipSelectedEvent } from "./events"
 import { AppServices, IUIBridge } from "./extensibility"
 import {
     AppLaunchModule,
@@ -40,35 +40,29 @@ export class AppRuntime extends Runtime<AppConfig> {
     }
 
     private _uiBridge: IUIBridge | undefined
-    private _uiBridgePromise: Promise<IUIBridge> | undefined
-    private _uiBridgeResolveFunction: Function | undefined
+    private _uiBridgeResolver?: { promise: Promise<IUIBridge>; resolve(uiBridge: IUIBridge): void }
 
-    public uiBridge(): Promise<IUIBridge> {
-        if (this._uiBridge) return Promise.resolve(this._uiBridge)
-        if (this._uiBridgePromise) return this._uiBridgePromise
-        this._uiBridgePromise = new Promise((resolve) => {
-            this._uiBridgeResolveFunction = resolve
-        })
+    public async uiBridge(): Promise<IUIBridge> {
+        if (this._uiBridge) return this._uiBridge
+        if (this._uiBridgeResolver) return await this._uiBridgeResolver.promise
 
-        return this._uiBridgePromise
-            .catch((e) => {
-                this.logger.error(e)
-                throw e
-            })
-            .finally(() => {
-                this._uiBridgePromise = undefined
-                this._uiBridgeResolveFunction = undefined
-            })
+        let resolve: (uiBridge: IUIBridge) => void = () => ""
+        const promise = new Promise<IUIBridge>((r) => (resolve = r))
+        this._uiBridgeResolver = { promise, resolve }
+
+        try {
+            return await this._uiBridgeResolver.promise
+        } finally {
+            this._uiBridgeResolver = undefined
+        }
     }
 
     public registerUIBridge(uiBridge: IUIBridge): UserfriendlyResult<void> {
-        if (this._uiBridge) {
-            return UserfriendlyResult.fail(AppRuntimeErrors.startup.uiBridgeAlreadyRegistered())
-        }
+        if (this._uiBridge) return UserfriendlyResult.fail(AppRuntimeErrors.startup.uiBridgeAlreadyRegistered())
+
         this._uiBridge = uiBridge
-        if (this._uiBridgePromise && this._uiBridgeResolveFunction) {
-            this._uiBridgeResolveFunction()
-        }
+        this._uiBridgeResolver?.resolve(uiBridge)
+
         return UserfriendlyResult.ok(undefined)
     }
 
@@ -132,6 +126,7 @@ export class AppRuntime extends Runtime<AppConfig> {
     public async selectAccount(accountAddress: string, _password: string): Promise<LocalAccountSession> {
         const session = await this.getOrCreateSession(accountAddress)
         this.sessionStorage.currentSession = session
+        this.eventBus.publish(new AccountSelectedEvent(session.address, session.account.id))
         return session
     }
 
