@@ -40,15 +40,15 @@ export class AppRuntime extends Runtime<AppConfig> {
     }
 
     private _uiBridge: IUIBridge | undefined
-    private _uiBridgeResolver?: { promise: Promise<IUIBridge>; resolveFunction(uiBridge: IUIBridge): void }
+    private _uiBridgeResolver?: { promise: Promise<IUIBridge>; resolve(uiBridge: IUIBridge): void }
 
     public async uiBridge(): Promise<IUIBridge> {
         if (this._uiBridge) return this._uiBridge
         if (this._uiBridgeResolver) return await this._uiBridgeResolver.promise
 
-        let resolveFunction: (uiBridge: IUIBridge) => void = () => ""
-        const promise = new Promise<IUIBridge>((resolve) => (resolveFunction = resolve))
-        this._uiBridgeResolver = { promise, resolveFunction }
+        let resolve: (uiBridge: IUIBridge) => void = () => ""
+        const promise = new Promise<IUIBridge>((r) => (resolve = r))
+        this._uiBridgeResolver = { promise, resolve }
 
         try {
             return await this._uiBridgeResolver.promise
@@ -61,7 +61,7 @@ export class AppRuntime extends Runtime<AppConfig> {
         if (this._uiBridge) return UserfriendlyResult.fail(AppRuntimeErrors.startup.uiBridgeAlreadyRegistered())
 
         this._uiBridge = uiBridge
-        this._uiBridgeResolver?.resolveFunction(uiBridge)
+        this._uiBridgeResolver?.resolve(uiBridge)
 
         return UserfriendlyResult.ok(undefined)
     }
