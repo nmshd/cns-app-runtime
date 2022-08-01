@@ -1,7 +1,7 @@
 import { NativePlatform } from "@js-soft/native-abstractions"
 import { AppConfig, createAppConfig } from "@nmshd/app-runtime"
 import { IConfigOverwrite } from "@nmshd/transport"
-import { AppRelationshipFacadeTest, MessageFacadeTest } from "./extensibility"
+import { AppRelationshipFacadeTest, MessageFacadeTest, UIBridgeTest } from "./extensibility"
 import { MessageEventingTest, RelationshipEventingAcceptTest, RelationshipEventingRejectTest } from "./modules"
 import { RelationshipEventingRevokeTest } from "./modules/RelationshipEventingRevoke.test"
 import { AccountNameTest, RuntimeModuleLoadingTest, StartupTest, TranslationProviderTest } from "./runtime"
@@ -67,5 +67,6 @@ export class Test {
         new AccountNameTest(config).run()
         new RuntimeModuleLoadingTest(config).run()
         new TranslationProviderTest(config).run()
+        new UIBridgeTest(config).run()
     }
 }
